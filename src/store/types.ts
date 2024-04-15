@@ -6,12 +6,15 @@ export interface Location {
 }
 
 export type ClimbingRouteSortKey =
+  | "id"
   | "distance"
   | "stars"
   | "gradescore"
   | "height"
   | "name"
   | "crag_name";
+
+export type SortDirection = "asc" | "desc";
 
 export interface ClimbingRouteSearchFilters {
   lat: number;
@@ -24,12 +27,21 @@ export interface ClimbingRouteSearchFilters {
   heightMin: number;
   heightMax: number;
   heightIncludeZero: boolean;
-  gradeType: number;
-  gradeSystem: number;
-  gradeScoreMin: number;
-  gradeScoreMax: number;
-  sortDirection: "asc" | "desc";
+  sortDirection: SortDirection;
   sortKey: ClimbingRouteSortKey;
+  grades: number[];
+}
+
+export const searchLocationTypes = ["map", "latlong", "crags"] as const;
+
+export type ClimbingSearchLocationType = (typeof searchLocationTypes)[number];
+
+export type ClimbingGradeRange = { [key: number]: [number, number] };
+
+export interface ClimbingSearchForm
+  extends Omit<ClimbingRouteSearchFilters, "grades"> {
+  locationType: ClimbingSearchLocationType;
+  gradeRanges: ClimbingGradeRange;
 }
 
 export interface ClimbingRoute {
@@ -42,6 +54,11 @@ export interface ClimbingRoute {
   gradescore: number;
   height: number;
   crag_id: number;
+}
+
+export interface ClimbingRouteSearchResults {
+  routes: ClimbingRoute[];
+  locations: Location[];
 }
 
 export interface ClimbingGradeType {
@@ -57,9 +74,7 @@ export interface ClimbingGrade {
   score: number;
 }
 
-export interface ClimbingRouteSearchResults {
-  routes: ClimbingRoute[];
-  locations: Location[];
+export interface ClimbingGrades {
   gradeTypes: ClimbingGradeType[];
   grades: ClimbingGrade[];
 }

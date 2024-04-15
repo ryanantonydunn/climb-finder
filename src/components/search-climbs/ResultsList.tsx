@@ -11,7 +11,6 @@ export function ResultsList({ results }: ResultsListProps) {
     return <div>No results to display...</div>;
   }
 
-  console.log(results.routes.map((r) => r.crag_id));
   return (
     <table className="p-2 text-xs">
       <thead>

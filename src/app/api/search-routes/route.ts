@@ -1,64 +1,18 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { dbLoad, unique } from "../helpers";
 import {
-  ClimbingGrade,
-  ClimbingGradeType,
   ClimbingRoute,
   ClimbingRouteSearchFilters,
   Location,
 } from "@/store/types";
 import { NextResponse } from "next/server";
+import { dbLoad } from "../helpers";
 
 export async function POST(req: Request) {
   try {
     const db = await dbLoad();
     if (!db) return;
 
-    // build query string
-    const filters = {
-      lat: 53.74312,
-      long: -2.01056,
-      distanceMax: 0.05,
-      routeNameFilter: "crack",
-      cragIds: [1112, 1356, 1248, 120, 108],
-      // cragIds: [],
-      starsMin: 2,
-      starsMax: 3,
-      heightMin: 10,
-      heightMax: 1000,
-      heightIncludeZero: true,
-      gradeType: 2,
-      gradeSystem: 2,
-      gradeScoreMin: 4,
-      gradeScoreMax: 10,
-      sortDirection: "asc",
-      sortKey: "distance",
-    };
-
-    /**
-     * Get grades
-     */
-    const gradeQuery = `
-      select * from grades
-        where
-          gradetype in (${filters.gradeType}) and
-          gradesystem in (${filters.gradeSystem}) and
-          score >= ${filters.gradeScoreMin} and
-          score <= ${filters.gradeScoreMax}
-        `;
-    const gradeRows = await db.all<ClimbingGrade[]>(gradeQuery);
-    const gradeIds = gradeRows.map((r) => r.id).join(",");
-    const gradeTypes = unique(gradeRows.map((r) => r.gradetype)).join(",");
-
-    /**
-     * Get grade types
-     */
-    const gradeTypeQuery = `
-      select * from grade_types
-        where
-          id in (${gradeTypes})
-    `;
-    const gradeTypeRows = await db.all<ClimbingGradeType[]>(gradeTypeQuery);
+    const data = await req.json();
+    const filters = data.filters as ClimbingRouteSearchFilters;
 
     /**
      * Get crags
@@ -84,6 +38,7 @@ export async function POST(req: Request) {
           limit 400
       `;
     }
+    console.log(locationQuery);
     const locationRows = await db.all<Location[]>(locationQuery);
     const cragIds = locationRows.map((r) => r.id);
 
@@ -118,6 +73,8 @@ export async function POST(req: Request) {
       ? `name like '%${filters.routeNameFilter}%' and`
       : ``;
 
+    const gradeIds = filters.grades.join(",");
+
     const routeQuery = `
       select ${routeFields} from routes
         where
@@ -137,11 +94,8 @@ export async function POST(req: Request) {
     const result = {
       routes: routeRows,
       locations: locationRows,
-      gradeTypes: gradeTypeRows,
-      grades: gradeRows,
     };
     return NextResponse.json(result, { status: 200 });
-    // return NextResponse.json({ result: "howdy" }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

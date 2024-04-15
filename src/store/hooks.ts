@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  ClimbingGrades,
   ClimbingRouteSearchFilters,
   ClimbingRouteSearchResults,
 } from "./types";
@@ -27,4 +28,19 @@ export function useData() {
   }, []);
 
   return { filters, results, search };
+}
+
+export function useGrades(): ClimbingGrades | null {
+  const [results, setResults] = React.useState<ClimbingGrades | null>(null);
+
+  React.useEffect(() => {
+    async function get() {
+      const res = await fetch("/api/grades");
+      const json = (await res.json()) as ClimbingGrades;
+      setResults(json);
+    }
+    get();
+  }, []);
+
+  return results ? { ...results } : null;
 }
