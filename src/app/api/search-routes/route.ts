@@ -1,4 +1,4 @@
-import { Route, RouteSearchFilters, Location } from "@/store/types";
+import { Crag, Route, RouteSearchFilters } from "@/store/types";
 import { NextResponse } from "next/server";
 import { dbLoad } from "../helpers";
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
           limit 400
       `;
     }
-    const cragRows = await db.all<Location[]>(cragQuery);
+    const cragRows = await db.all<Crag[]>(cragQuery);
     const cragIds = cragRows.map((r) => r.id);
 
     const cragIdsForFilter = cragIds.join(",");
@@ -58,8 +58,9 @@ export async function POST(req: Request) {
       "crag_id",
     ].join(",");
 
-    const routeSort =
-      filters.sortKey === "distance" ? cragIdsForSort : filters.sortKey;
+    const routeSort = ["distance", "crag_name"].includes(filters.sortKey)
+      ? cragIdsForSort
+      : filters.sortKey;
 
     const heightFilterBase = `height >= ${filters.heightMin} and height <= ${filters.heightMax}`;
     const heightFilterWithZero = `id in (select id from routes where height = 0 or ${heightFilterBase})`;

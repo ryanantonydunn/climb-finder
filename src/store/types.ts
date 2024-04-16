@@ -48,7 +48,7 @@ export interface RouteSearchFormHook {
   setForm: (form: Partial<RouteSearchForm>) => void;
 }
 
-export interface ClimbingRoute {
+export interface Route {
   id: number;
   name: string;
   grade: number;
@@ -61,7 +61,7 @@ export interface ClimbingRoute {
 }
 
 export interface RouteSearchResults {
-  routes: ClimbingRoute[];
+  routes: Route[];
   crags: Crag[];
 }
 

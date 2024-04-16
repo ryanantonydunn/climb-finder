@@ -20,7 +20,7 @@ const headers = [
   { name: "Grade", sortKey: "gradescore" },
   { name: "Stars", sortKey: "stars" },
   { name: "Height", sortKey: "height" },
-  { name: "Crag" },
+  { name: "Crag", sortKey: "crag_name" },
   { name: "Distance" },
 ];
 
