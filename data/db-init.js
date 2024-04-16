@@ -1,4 +1,10 @@
-const { dbPathFull, dbLoadFull, dbInsertArray, dbRun } = require("./db-utils");
+const {
+  dbPathFull,
+  dbLoadFull,
+  dbInsertArray,
+  dbRun,
+  dbLoadPublic,
+} = require("./db-utils");
 const fs = require("fs");
 const path = require("path");
 
@@ -57,6 +63,18 @@ async function createTableGradeTypes(db) {
   await dbRun(db, query);
 }
 
+async function createTableGradeSystems(db) {
+  console.log("creating grade_systems table");
+  const query = `
+    create table grade_systems (
+      id integer primary key,
+      gradetype integer,
+      name string
+    );
+  `;
+  await dbRun(db, query);
+}
+
 async function createTableGrades(db) {
   console.log("creating grades table");
   const query = `
@@ -105,14 +123,16 @@ async function dbInitMain() {
   }
 
   // create database
-  const db = await dbLoadFull();
+  const db = await dbLoadPublic();
 
-  await createTableCrags(db);
-  await createTableRoutes(db);
-  await createTableGradeTypes(db);
-  await createTableGrades(db);
+  // await createTableCrags(db);
+  // await createTableRoutes(db);
+  // await createTableGradeTypes(db);
+  await dbRun(db, `drop table grade_systems`);
+  await createTableGradeSystems(db);
+  // await createTableGrades(db);
 
-  await initCrags(db);
+  // await initCrags(db);
 }
 
 dbInitMain();

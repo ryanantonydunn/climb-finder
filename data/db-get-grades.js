@@ -1,4 +1,9 @@
-const { dbInsertArray, dbLoadFull, dbRun } = require("./db-utils");
+const {
+  dbInsertArray,
+  dbLoadFull,
+  dbRun,
+  dbLoadPublic,
+} = require("./db-utils");
 
 /**
  * Get grade information from object in source here:
@@ -41,10 +46,25 @@ async function getGradeTypes(db) {
   ]);
 }
 
+async function getGradeSystems(db) {
+  const gradeSystems = [];
+  Object.entries(grades).forEach(([gradeType, types]) =>
+    Object.entries(types).forEach(([gradeSystem, system]) => {
+      const typeId = Number(gradeType);
+      const systemId = Number(gradeSystem);
+      const { name } = system;
+      gradeSystems.push([systemId, typeId, name]);
+    })
+  );
+  console.log("adding grade systems");
+  dbInsertArray(db, "grade_systems", gradeSystems);
+}
+
 async function getGradeData() {
-  const db = await dbLoadFull();
-  await getGrades(db);
-  await getGradeTypes(db);
+  const db = await dbLoadPublic();
+  // await getGrades(db);
+  // await getGradeTypes(db);
+  await getGradeSystems(db);
 }
 
 getGradeData();
