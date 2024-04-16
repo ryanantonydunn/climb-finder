@@ -1,13 +1,13 @@
 import React from "react";
 import {
-  RouteSearchFormHook,
-  GradeIdsByType,
   GradeRange,
-  Grades,
+  GradesRef,
+  GradesResponse,
+  RouteSearchForm,
+  RouteSearchFormHook,
+  RouteSearchLocationType,
   RouteSearchResults,
   RouteSearchSortKey,
-  RouteSearchForm,
-  RouteSearchLocationType,
   SortDirection,
 } from "./types";
 
@@ -15,73 +15,99 @@ export function useData() {
   // Handle getting results
   const [results, setResults] = React.useState<RouteSearchResults | null>(null);
 
-  const search = React.useCallback(
-    (form: RouteSearchForm, gradeIdsByType: GradeIdsByType) => {
-      async function runSearch() {
-        try {
-          /**
-           * Build filters from form
-           */
-          // get all grades from the ranges
-          const grades: number[] = [];
-          Object.entries(form.gradeRanges).forEach(([id, [start, end]]) => {
-            const gradeTypeId = Number(id);
-            grades.push(...gradeIdsByType[gradeTypeId].slice(start, end + 1));
-          });
+  const search = React.useCallback((form: RouteSearchForm, ref: GradesRef) => {
+    async function runSearch() {
+      try {
+        /**
+         * Build filters from form
+         */
+        // get all grade ids from the ranges
+        const allGradeIds: number[] = [];
+        form.gradeRanges.forEach((range) => {
+          const gradeType = ref.systemTypes[range.system];
+          const { gradeIds } = ref.types[gradeType].systems[range.system];
+          allGradeIds.push(...gradeIds.slice(range.start, range.end + 1));
+        });
 
-          // duplicate all relevant fields
-          const { locationType, gradeRanges, ...sharedValues } = form;
-          if (locationType !== "crags") {
-            sharedValues.cragIds = [];
-          }
-
-          const filters = { ...sharedValues, grades };
-
-          /**
-           * Make the API call with the filters
-           */
-          const res = await fetch("/api/search-routes", {
-            method: "POST",
-            body: JSON.stringify({ filters }),
-          });
-          const json = (await res.json()) as RouteSearchResults;
-          setResults(json);
-          setQueryStringFromForm(form);
-        } catch (e) {
-          console.error(e);
+        // duplicate all relevant fields
+        const { locationType, gradeRanges, ...sharedValues } = form;
+        if (locationType !== "crags") {
+          sharedValues.cragIds = [];
         }
+
+        const filters = { ...sharedValues, grades: allGradeIds };
+
+        /**
+         * Make the API call with the filters
+         */
+        const res = await fetch("/api/search-routes", {
+          method: "POST",
+          body: JSON.stringify({ filters }),
+        });
+        const json = (await res.json()) as RouteSearchResults;
+        setResults(json);
+        setQueryStringFromForm(form);
+      } catch (e) {
+        console.error(e);
       }
-      runSearch();
-    },
-    []
-  );
+    }
+    runSearch();
+  }, []);
 
   return { results, search };
 }
 
-export function useGrades(): Grades | null {
-  const [results, setResults] = React.useState<Grades | null>(null);
+export function useGrades(): GradesRef | null {
+  const [results, setResults] = React.useState<GradesRef | null>(null);
 
   React.useEffect(() => {
     async function get() {
       const res = await fetch("/api/grades");
-      const json = (await res.json()) as Grades;
+      const json = (await res.json()) as GradesResponse;
 
       /**
-       * Reference object for all grade ID's available
-       * Eg: { 2: [3,4,5], ... } // where 2 is 'Trad' and 3,4,5 are 'S','HS','VS'
+       * Reference object for all grades
        */
-      const idsByType = Object.fromEntries(
-        json.gradeTypes.map((t) => [
-          t.id,
-          json.grades
-            .filter((g) => g.gradetype === t.id)
-            .sort((a, b) => a.score - b.score)
-            .map((g) => g.id),
-        ])
-      );
+      const gradesRef: GradesRef = {
+        systemTypes: Object.fromEntries(
+          json.systems.map((system) => [system.id, system.gradetype])
+        ),
+        types: Object.fromEntries(
+          json.types.map((type) => [
+            type.id,
+            {
+              name: type.name,
+              systems: Object.fromEntries(
+                json.systems
+                  .filter((s) => s.gradetype === type.id)
+                  .map((system) => {
+                    // get all grades in this type and system
+                    const grades = json.grades.filter(
+                      (g) =>
+                        g.gradesystem === system.id && g.gradetype === type.id
+                    );
+                    // prepare ids sorted by grade
+                    const gradeIds = grades
+                      .sort((a, b) => a.score - b.score)
+                      .map((g) => g.id);
+                    return [
+                      system.id,
+                      {
+                        name: system.name,
+                        gradeIds,
+                        grades: Object.fromEntries(
+                          grades.map((g) => [g.id, g])
+                        ),
+                      },
+                    ];
+                  })
+              ),
+            },
+          ])
+        ),
+      };
 
-      setResults({ ...json, idsByType });
+      setResults(gradesRef);
     }
     get();
   }, []);
@@ -113,7 +139,7 @@ function getInitialForm(): RouteSearchForm {
   return {
     locationType: (params.get("locationType") ||
       "map") as RouteSearchLocationType,
-    gradeRanges: getGradeRangesFromUrlVar(params.get("gradeRanges") || ""),
+    gradeRanges: getGradeRangesFromUrlVar(params.get("gradeRanges") || "2,1,6"),
     lat: Number(params.get("lat") || 53.74312),
     long: Number(params.get("long") || -2.01056),
     routeNameFilter: params.get("routeNameFilter") || "",
@@ -131,26 +157,24 @@ function getInitialForm(): RouteSearchForm {
 
 /**
  * Extract the grade range object from the query string
- * Eg: 1,3,4-2,4,5 => { 1: [3,4], 2: [4,5] }
  */
-function getGradeRangesFromUrlVar(str: string): GradeRange {
-  if (!str) return {};
-  return Object.fromEntries(
-    str.split("-").map((subStr) => {
-      const [id, start, end] = subStr.split(",");
-      return [Number(id), [Number(start), Number(end)]];
-    })
-  );
+function getGradeRangesFromUrlVar(str: string): GradeRange[] {
+  if (!str) return [];
+  return str.split("-").map((subStr) => {
+    const [system, start, end] = subStr.split(",");
+    return {
+      system: Number(system),
+      start: Number(start),
+      end: Number(end),
+    };
+  });
 }
 
 /**
  * Prepare the grade range object for the query string
- * Eg: { 1: [3,4], 2: [4,5] } => 1,3,4-2,4,5
  */
-function getUrlVarFromGradeRanges(ranges: GradeRange): string {
-  return Object.entries(ranges)
-    .map(([id, [start, end]]) => `${id},${start},${end}`)
-    .join("-");
+function getUrlVarFromGradeRanges(ranges: GradeRange[]): string {
+  return ranges.map((r) => `${r.system},${r.start},${r.end}`).join("-");
 }
 
 /**

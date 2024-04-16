@@ -10,7 +10,7 @@ const initialLayout: Layout = [true, false, true];
 
 export function Layout() {
   const form = useForm();
-  const grades = useGrades();
+  const gradesRef = useGrades();
   const { results, search } = useData();
   const [layout, setLayout] = React.useState<Layout>(initialLayout);
   const [showList, showMap, showFilters] = layout;
@@ -59,7 +59,7 @@ export function Layout() {
             <div className="flex-grow h-full bg-gray-900">
               <ResultsList
                 results={results}
-                grades={grades}
+                gradesRef={gradesRef}
                 form={form}
                 search={search}
               />
@@ -69,7 +69,7 @@ export function Layout() {
         </section>
         {showFilters && (
           <section className="w-80 bg-gray-900 overflow-y-auto">
-            <FilterForm search={search} grades={grades} form={form} />
+            <FilterForm search={search} gradesRef={gradesRef} form={form} />
           </section>
         )}
       </main>

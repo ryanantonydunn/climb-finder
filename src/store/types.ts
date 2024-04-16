@@ -36,11 +36,15 @@ export const routeSearchLocationTypes = ["map", "latlong", "crags"] as const;
 
 export type RouteSearchLocationType = (typeof routeSearchLocationTypes)[number];
 
-export type GradeRange = { [key: number]: [number, number] };
+export type GradeRange = {
+  system: number;
+  start: number;
+  end: number;
+};
 
 export interface RouteSearchForm extends Omit<RouteSearchFilters, "grades"> {
   locationType: RouteSearchLocationType;
-  gradeRanges: GradeRange;
+  gradeRanges: GradeRange[];
 }
 
 export interface RouteSearchFormHook {
@@ -56,6 +60,7 @@ export interface Route {
   stars: number;
   gradetype: number;
   gradescore: number;
+  gradesystem: number;
   height: number;
   crag_id: number;
 }
@@ -70,6 +75,12 @@ export interface GradeType {
   name: string;
 }
 
+export interface GradeSystem {
+  id: number;
+  name: string;
+  gradetype: number;
+}
+
 export interface Grade {
   id: number;
   name: string;
@@ -78,17 +89,28 @@ export interface Grade {
   score: number;
 }
 
-export interface GradeIdsByType {
-  [key: number]: number[];
+export interface GradesRef {
+  systemTypes: { [key: number]: number };
+  types: {
+    [key: number]: {
+      name: string;
+      systems: {
+        [key: number]: {
+          name: string;
+          gradeIds: number[];
+          grades: {
+            [key: number]: Grade;
+          };
+        };
+      };
+    };
+  };
 }
 
-export interface Grades {
-  gradeTypes: GradeType[];
+export interface GradesResponse {
+  types: GradeType[];
+  systems: GradeSystem[];
   grades: Grade[];
-  idsByType: GradeIdsByType;
 }
 
-export type RouteSearchFn = (
-  filters: RouteSearchForm,
-  idsByType: GradeIdsByType
-) => void;
+export type RouteSearchFn = (filters: RouteSearchForm, ref: GradesRef) => void;

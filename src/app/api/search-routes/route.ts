@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         select * from crags
           where ${distanceQueryString} < ${filters.distanceMax}${cragSort}
           ${cragOrderBy}
-          limit 400
+          limit 200
       `;
     }
     const cragRows = await db.all<Crag[]>(cragQuery);
@@ -53,6 +53,7 @@ export async function POST(req: Request) {
       "techgrade",
       "stars",
       "gradetype",
+      "gradesystem",
       "gradescore",
       "height",
       "crag_id",
@@ -72,7 +73,9 @@ export async function POST(req: Request) {
       ? `name like '%${filters.routeNameFilter}%' and`
       : ``;
 
-    const gradeIds = filters.grades.join(",");
+    const gradeFilter = filters.grades.length
+      ? `grade in (${filters.grades.join(",")}) and`
+      : "";
 
     const routeQuery = `
       select ${routeFields} from routes
@@ -81,10 +84,10 @@ export async function POST(req: Request) {
           stars >= ${filters.starsMin} and
           stars <= ${filters.starsMax} and
           ${routeName}
-          ${heightFilter} and
-          grade in (${gradeIds})
+          ${gradeFilter}
+          ${heightFilter}
         order by ${routeSort} ${filters.sortDirection}
-        limit 1000
+        limit 200
       `;
 
     const routeRows = await db.all<Route[]>(routeQuery);

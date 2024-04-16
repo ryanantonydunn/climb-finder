@@ -2,15 +2,15 @@
 
 import {
   RouteSearchFormHook,
-  Grades,
   RouteSearchResults,
   RouteSearchFn,
   RouteSearchForm,
+  GradesRef,
 } from "@/store/types";
 
 interface ResultsListProps {
   results: RouteSearchResults | null;
-  grades: Grades | null;
+  gradesRef: GradesRef | null;
   form: RouteSearchFormHook;
   search: RouteSearchFn;
 }
@@ -26,11 +26,11 @@ const headers = [
 
 export function ResultsList({
   results,
-  grades,
+  gradesRef,
   form: formObj,
   search,
 }: ResultsListProps) {
-  if (!results || !grades || !formObj.form) {
+  if (!results || !gradesRef || !formObj.form) {
     return <div>No results to display...</div>;
   }
   const { form, setForm } = formObj;
@@ -55,7 +55,7 @@ export function ResultsList({
                       } as Partial<RouteSearchForm>;
                       setForm(newForm);
                       const newFormComplete = { ...form, ...newForm };
-                      search(newFormComplete, grades.idsByType);
+                      search(newFormComplete, gradesRef);
                     }
                   : undefined
               }
@@ -85,7 +85,10 @@ export function ResultsList({
               </a>
             </td>
             <td className="py-1 px-2 whitespace-nowrap">
-              {grades.grades.find((g) => g.id === route.grade)?.name}
+              {
+                gradesRef.types[route.gradetype].systems[route.gradesystem]
+                  .grades[route.grade].name
+              }
               &nbsp;{route.techgrade}
             </td>
             <td className="whitespace-nowrap tracking-tighter px-2 text-red-600">

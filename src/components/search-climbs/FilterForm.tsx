@@ -1,15 +1,20 @@
 "use client";
 
-import { RouteSearchFormHook, Grades, RouteSearchFn } from "@/store/types";
+import { GradesRef, RouteSearchFn, RouteSearchFormHook } from "@/store/types";
+import React from "react";
 
 interface FilterFormProps {
   search: RouteSearchFn;
-  grades: Grades | null;
+  gradesRef: GradesRef | null;
   form: RouteSearchFormHook;
 }
 
-export function FilterForm({ search, grades, form: formObj }: FilterFormProps) {
-  if (!grades || !grades.idsByType || !formObj.form) return "Loading...";
+export function FilterForm({
+  search,
+  gradesRef,
+  form: formObj,
+}: FilterFormProps) {
+  if (!gradesRef || !formObj.form) return "Loading...";
   const { form, setForm } = formObj;
 
   return (
@@ -17,41 +22,41 @@ export function FilterForm({ search, grades, form: formObj }: FilterFormProps) {
       <div className="mb-2">
         <h2 className="mb-2 font-bold text-base">Location</h2>
         <div className="mb-2">
-          <label className="inline-block mb-1 mr-1 p-1 whitespace-nowrap">
+          <label className="inline-block mb-1 mr-1 p-1 px-2 bg-gray-700 rounded whitespace-nowrap">
             <input
-              className="w-4 h-4 mr-2"
+              className="w-3 h-3 mr-1"
               type="radio"
               value="search"
               checked={form.locationType === "map"}
               onChange={() => {
                 setForm({ locationType: "map" });
               }}
-            />{" "}
-            Search on map
+            />
+            Search
           </label>
-          <label className="inline-block mb-1 mr-1 p-1 whitespace-nowrap">
+          <label className="inline-block mb-1 mr-1 p-1 px-2 bg-gray-700 rounded whitespace-nowrap">
             <input
-              className="w-4 h-4 mr-2"
+              className="w-3 h-3 mr-1"
               type="radio"
               value="latlong"
               checked={form.locationType === "latlong"}
               onChange={() => {
                 setForm({ locationType: "latlong" });
               }}
-            />{" "}
+            />
             Lat/Long
           </label>
-          <label className="inline-block mb-1 mr-1 p-1 whitespace-nowrap">
+          <label className="inline-block mb-1 mr-1 p-1 px-2 bg-gray-700 rounded whitespace-nowrap">
             <input
-              className="w-4 h-4 mr-2"
+              className="w-3 h-3 mr-1"
               type="radio"
-              value="locationNames"
+              value="crags"
               checked={form.locationType === "crags"}
               onChange={() => {
                 setForm({ locationType: "crags" });
               }}
-            />{" "}
-            Search crags
+            />
+            Crags
           </label>
         </div>
         {form.locationType === "map" && (
@@ -124,113 +129,129 @@ export function FilterForm({ search, grades, form: formObj }: FilterFormProps) {
           </div>
         )}
       </div>
-      <div className="mb-2">
-        <h2 className="mb-2 font-bold text-base">Climbing types</h2>
-        {grades.gradeTypes.map((gradeType) => {
-          const all = grades.idsByType[gradeType.id];
-          const range = form.gradeRanges[gradeType.id];
-          return (
-            <label
-              key={gradeType.id}
-              className="inline-block mb-1 mr-1 p-1 whitespace-nowrap"
-            >
-              <input
-                className="w-4 h-4 mr-2"
-                type="checkbox"
-                checked={!!range}
-                onChange={() => {
-                  if (!!range) {
-                    // remove all grades
-                    const newGradeRanges = { ...form.gradeRanges };
-                    delete newGradeRanges[gradeType.id];
-                    setForm({ gradeRanges: newGradeRanges });
-                  } else {
-                    // add all grades
-                    setForm({
-                      gradeRanges: {
-                        ...form.gradeRanges,
-                        [gradeType.id]: [0, all.length - 1],
-                      },
-                    });
-                  }
-                }}
-              />
-              {gradeType.name}
-            </label>
-          );
-        })}
-      </div>
       <div className="mb-4">
-        {Object.entries(form.gradeRanges).length > 0 && (
-          <h2 className="mb-2 font-bold text-base">Grades</h2>
-        )}
-        {Object.entries(form.gradeRanges).map(([typeId, [start, end]]) => {
-          const gradeTypeId = Number(typeId);
-          const all = grades.idsByType[gradeTypeId];
-          const gradeTypeName =
-            grades.gradeTypes.find((g) => g.id === gradeTypeId)?.name || "";
+        <h2 className="mb-2 font-bold text-base">Grade ranges</h2>
+        {form.gradeRanges.map((range, i) => {
+          const gradeType = gradesRef.systemTypes[range.system];
+          const { gradeIds, grades } =
+            gradesRef.types[gradeType].systems[range.system];
           return (
-            <div key={gradeTypeId} className="mb-2">
-              <label className="block mb-1">{gradeTypeName} grade range</label>
-              <div className="flex gap-2">
+            <div key={i} className="mb-2 flex gap-2">
+              <div className="flex-grow">
                 <select
-                  className="bg-gray-600 p-1"
-                  value={start}
+                  className="bg-gray-600 p-1 w-full"
+                  value={range.system}
                   onChange={(e) => {
-                    const newMinimum = Number(e.currentTarget.value);
-                    setForm({
-                      gradeRanges: {
-                        ...form.gradeRanges,
-                        [gradeTypeId]: [newMinimum, end],
-                      },
-                    });
-                  }}
-                  aria-label={`${gradeTypeName} grade range minimum`}
-                >
-                  {all.map((gradeId, i) => {
-                    const grade = grades.grades.find((g) => g.id === gradeId);
-                    return (
-                      <option
-                        key={`grade-min-${gradeId}`}
-                        value={i}
-                        disabled={end <= i}
-                      >
-                        {grade?.name}
-                      </option>
+                    const newSystemId = Number(e.currentTarget.value);
+                    const newSystemType = gradesRef.systemTypes[newSystemId];
+                    const newSystem =
+                      gradesRef.types[newSystemType].systems[newSystemId];
+                    console.log(
+                      newSystemId,
+                      newSystemType,
+                      newSystem,
+                      gradesRef
                     );
-                  })}
+                    const newRanges = [...form.gradeRanges];
+                    newRanges[i] = {
+                      system: Number(e.currentTarget.value),
+                      start: 0,
+                      end: newSystem.gradeIds.length - 1,
+                    };
+                    setForm({ gradeRanges: newRanges });
+                  }}
+                >
+                  {Object.entries(gradesRef.types).map(([typeId, type], i) => (
+                    <optgroup key={typeId} label={type.name}>
+                      {Object.entries(type.systems).map(
+                        ([systemId, system]) => (
+                          <option key={systemId} value={systemId}>
+                            {type.name !== system.name
+                              ? `${type.name}: ${system.name}`
+                              : system.name}
+                          </option>
+                        )
+                      )}
+                    </optgroup>
+                  ))}
                 </select>
+              </div>
+              <div>
                 <select
-                  className="bg-gray-600 p-1"
-                  value={end}
+                  className="bg-gray-600 p-1 w-full"
+                  value={range.start}
                   onChange={(e) => {
-                    const newMaximum = Number(e.currentTarget.value);
-                    setForm({
-                      gradeRanges: {
-                        ...form.gradeRanges,
-                        [gradeTypeId]: [start, newMaximum],
-                      },
-                    });
+                    const newRanges = [...form.gradeRanges];
+                    newRanges[i] = {
+                      ...newRanges[i],
+                      start: Number(e.currentTarget.value),
+                    };
+                    setForm({ gradeRanges: newRanges });
                   }}
-                  aria-label={`${gradeTypeName} grade range maximum`}
                 >
-                  {all.map((gradeId, i) => {
-                    const grade = grades.grades.find((g) => g.id === gradeId);
-                    return (
-                      <option
-                        key={`grade-max-${gradeId}`}
-                        value={i}
-                        disabled={start >= i}
-                      >
-                        {grade?.name}
-                      </option>
-                    );
-                  })}
+                  {gradeIds.map((gradeId, gradeIdIndex) => (
+                    <option
+                      key={gradeIdIndex}
+                      value={gradeIdIndex}
+                      disabled={range.end < gradeIdIndex}
+                    >
+                      {grades[gradeId].name}
+                    </option>
+                  ))}
                 </select>
+              </div>
+              <div>
+                <select
+                  className="bg-gray-600 p-1 w-full"
+                  value={range.end}
+                  onChange={(e) => {
+                    const newRanges = [...form.gradeRanges];
+                    newRanges[i] = {
+                      ...newRanges[i],
+                      end: Number(e.currentTarget.value),
+                    };
+                    setForm({ gradeRanges: newRanges });
+                  }}
+                >
+                  {gradeIds.map((gradeId, gradeIdIndex) => (
+                    <option
+                      key={gradeIdIndex}
+                      value={gradeIdIndex}
+                      disabled={range.start > gradeIdIndex}
+                    >
+                      {grades[gradeId].name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <button
+                  className="bg-gray-800 rounded py-1 px-2"
+                  aria-label="remove"
+                  onClick={() => {
+                    const newRanges = [...form.gradeRanges];
+                    newRanges.splice(i, 1);
+                    setForm({ gradeRanges: newRanges });
+                  }}
+                >
+                  &#x2715;
+                </button>
               </div>
             </div>
           );
         })}
+        <button
+          className="bg-gray-700 rounded py-1 px-2"
+          onClick={() => {
+            const newRanges = [
+              ...form.gradeRanges,
+              { system: 2, start: 1, end: 12 },
+            ];
+            setForm({ gradeRanges: newRanges });
+          }}
+        >
+          + Add
+        </button>
       </div>
       <div className="mb-2">
         <h2 className="mb-2 font-bold text-base">Height</h2>
@@ -343,7 +364,7 @@ export function FilterForm({ search, grades, form: formObj }: FilterFormProps) {
       </div>
       <button
         className="w-full p-2 bg-green-800 rounded"
-        onClick={() => search(form, grades.idsByType)}
+        onClick={() => search(form, gradesRef)}
       >
         Search
       </button>
