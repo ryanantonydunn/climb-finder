@@ -1,8 +1,4 @@
-import {
-  ClimbingRoute,
-  ClimbingRouteSearchFilters,
-  Location,
-} from "@/store/types";
+import { Route, RouteSearchFilters, Location } from "@/store/types";
 import { NextResponse } from "next/server";
 import { dbLoad } from "../helpers";
 
@@ -12,35 +8,37 @@ export async function POST(req: Request) {
     if (!db) return;
 
     const data = await req.json();
-    const filters = data.filters as ClimbingRouteSearchFilters;
+    const filters = data.filters as RouteSearchFilters;
 
     /**
      * Get crags
      */
-    let locationQuery = "";
+    let cragQuery = "";
+    const cragOrderBy = filters.sortKey === "crag_name" ? "order by name" : "";
     if (filters.cragIds.length) {
-      locationQuery = `
-        select * from locations
+      cragQuery = `
+        select * from crags
           where id in (${filters.cragIds.join(",")})
+          ${cragOrderBy}
           limit 400
       `;
     } else {
       // search by lat/long
       const cosLat2 = Math.cos((filters.lat * Math.PI) / 180) ^ 2;
       const distanceQueryString = `((${filters.lat}-lat)*(${filters.lat}-lat)) + ((${filters.long}-long)*(${filters.long}-long)*${cosLat2})`;
-      const LocationSort =
+      const cragSort =
         filters.sortKey === "distance"
           ? ` order by ${distanceQueryString} ${filters.sortDirection}`
           : "";
-      locationQuery = `
-        select * from locations
-          where ${distanceQueryString} < ${filters.distanceMax}${LocationSort}
+      cragQuery = `
+        select * from crags
+          where ${distanceQueryString} < ${filters.distanceMax}${cragSort}
+          ${cragOrderBy}
           limit 400
       `;
     }
-    console.log(locationQuery);
-    const locationRows = await db.all<Location[]>(locationQuery);
-    const cragIds = locationRows.map((r) => r.id);
+    const cragRows = await db.all<Location[]>(cragQuery);
+    const cragIds = cragRows.map((r) => r.id);
 
     const cragIdsForFilter = cragIds.join(",");
     const cragIdsForSort = getCragOrderQueryString(cragIds);
@@ -88,12 +86,12 @@ export async function POST(req: Request) {
         limit 1000
       `;
 
-    const routeRows = await db.all<ClimbingRoute[]>(routeQuery);
+    const routeRows = await db.all<Route[]>(routeQuery);
 
     // return data
     const result = {
       routes: routeRows,
-      locations: locationRows,
+      crags: cragRows,
     };
     return NextResponse.json(result, { status: 200 });
   } catch (err: any) {

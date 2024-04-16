@@ -52,7 +52,7 @@ async function getDataFromCragPages(db, ids) {
 
     // update crag name
     console.log(`updating crag ${id} name to ${name}`);
-    await dbRun(db, `update locations set name = "${name}" where id = ${id}`);
+    await dbRun(db, `update crags set name = "${name}" where id = ${id}`);
 
     // save routes
     const routesArr = routes.map((route) => [

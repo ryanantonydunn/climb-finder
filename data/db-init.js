@@ -2,8 +2,8 @@ const { dbPathFull, dbLoadFull, dbInsertArray, dbRun } = require("./db-utils");
 const fs = require("fs");
 const path = require("path");
 
-async function createTableLocations(db) {
-  console.log("creating locations table");
+async function createTableRoutes(db) {
+  console.log("creating routes table");
   const query = `
     create table routes (
       id integer primary key,
@@ -33,10 +33,10 @@ async function createTableLocations(db) {
   await dbRun(db, query);
 }
 
-async function createTableRoutes(db) {
-  console.log("creating routes table");
+async function createTableCrags(db) {
+  console.log("creating crags table");
   const query = `
-    create table locations (
+    create table crags (
       id integer primary key,
       lat float,
       long float,
@@ -71,7 +71,7 @@ async function createTableGrades(db) {
   await dbRun(db, query);
 }
 
-async function initLocations(db) {
+async function initCrags(db) {
   // load all crags and remove duplicates
   const crags = [];
   for (let i = 0; i < 9; i++) {
@@ -94,7 +94,7 @@ async function initLocations(db) {
 
   // initialise crag positions from json file to crag-positions db
   console.log(`writing rows: ${crags.length}`);
-  await dbInsertArray(db, "locations", crags);
+  await dbInsertArray(db, "crags", crags);
 }
 
 async function dbInitMain() {
@@ -107,12 +107,12 @@ async function dbInitMain() {
   // create database
   const db = await dbLoadFull();
 
-  await createTableLocations(db);
+  await createTableCrags(db);
   await createTableRoutes(db);
   await createTableGradeTypes(db);
   await createTableGrades(db);
 
-  await initLocations(db);
+  await initCrags(db);
 }
 
 dbInitMain();

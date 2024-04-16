@@ -1,11 +1,11 @@
-export interface Location {
+export interface Crag {
   id: number;
   lat: number;
   long: number;
   name: string;
 }
 
-export type ClimbingRouteSortKey =
+export type RouteSearchSortKey =
   | "id"
   | "distance"
   | "stars"
@@ -16,7 +16,7 @@ export type ClimbingRouteSortKey =
 
 export type SortDirection = "asc" | "desc";
 
-export interface ClimbingRouteSearchFilters {
+export interface RouteSearchFilters {
   lat: number;
   long: number;
   distanceMax: number;
@@ -28,20 +28,24 @@ export interface ClimbingRouteSearchFilters {
   heightMax: number;
   heightIncludeZero: boolean;
   sortDirection: SortDirection;
-  sortKey: ClimbingRouteSortKey;
+  sortKey: RouteSearchSortKey;
   grades: number[];
 }
 
-export const searchLocationTypes = ["map", "latlong", "crags"] as const;
+export const routeSearchLocationTypes = ["map", "latlong", "crags"] as const;
 
-export type ClimbingSearchLocationType = (typeof searchLocationTypes)[number];
+export type RouteSearchLocationType = (typeof routeSearchLocationTypes)[number];
 
-export type ClimbingGradeRange = { [key: number]: [number, number] };
+export type GradeRange = { [key: number]: [number, number] };
 
-export interface ClimbingSearchForm
-  extends Omit<ClimbingRouteSearchFilters, "grades"> {
-  locationType: ClimbingSearchLocationType;
-  gradeRanges: ClimbingGradeRange;
+export interface RouteSearchForm extends Omit<RouteSearchFilters, "grades"> {
+  locationType: RouteSearchLocationType;
+  gradeRanges: GradeRange;
+}
+
+export interface RouteSearchFormHook {
+  form: RouteSearchForm | null;
+  setForm: (form: Partial<RouteSearchForm>) => void;
 }
 
 export interface ClimbingRoute {
@@ -56,17 +60,17 @@ export interface ClimbingRoute {
   crag_id: number;
 }
 
-export interface ClimbingRouteSearchResults {
+export interface RouteSearchResults {
   routes: ClimbingRoute[];
-  locations: Location[];
+  crags: Crag[];
 }
 
-export interface ClimbingGradeType {
+export interface GradeType {
   id: number;
   name: string;
 }
 
-export interface ClimbingGrade {
+export interface Grade {
   id: number;
   name: string;
   gradesystem: number;
@@ -74,7 +78,17 @@ export interface ClimbingGrade {
   score: number;
 }
 
-export interface ClimbingGrades {
-  gradeTypes: ClimbingGradeType[];
-  grades: ClimbingGrade[];
+export interface GradeIdsByType {
+  [key: number]: number[];
 }
+
+export interface Grades {
+  gradeTypes: GradeType[];
+  grades: Grade[];
+  idsByType: GradeIdsByType;
+}
+
+export type RouteSearchFn = (
+  filters: RouteSearchForm,
+  idsByType: GradeIdsByType
+) => void;

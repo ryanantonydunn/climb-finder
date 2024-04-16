@@ -4,6 +4,7 @@ const {
   getValueSqlStringFromArray,
   unique,
   dbLoadPublic,
+  dbRun,
 } = require("./db-utils");
 
 const homeLat = 53.74312;
@@ -73,18 +74,18 @@ async function dbTestSearch() {
     "crag_id",
   ].join(",");
   const distanceQueryString = getDistanceQueryString(lat, long);
-  const LocationSort =
+  const cragSort =
     sortKey === "distance"
       ? ` order by ${distanceQueryString} ${sortDirection}`
       : "";
-  const locationQuery = `select * from locations where ${distanceQueryString} < ${maxDistance}${LocationSort}`;
-  const locationRows = await dbRows(db, locationQuery);
-  const cragIds = locationRows.map((r) => r.id);
+  const cragQuery = `select * from crags where ${distanceQueryString} < ${maxDistance}${cragSort}`;
+  const cragRows = await dbRows(db, cragQuery);
+  const cragIds = cragRows.map((r) => r.id);
 
   const cragIdsForFilter = cragIds.join(",");
   const cragIdsForSort = getCragOrderQueryString(cragIds);
 
-  // get routes using grades and locations
+  // get routes using grades and crags
   const routeSort = sortKey === "distance" ? cragIdsForSort : sortKey;
   const routeQuery = `
     select ${fields} from routes
@@ -100,7 +101,7 @@ async function dbTestSearch() {
   // return data
   const data = {
     routes: routeRows,
-    locations: locationRows,
+    crags: cragRows,
     gradeTypes: gradeTypeRows,
     grades: gradeRows,
   };
@@ -111,7 +112,7 @@ async function dbTestSearch() {
 async function dbTestSearch2() {
   const db = await dbLoadPublic();
 
-  // get routes using grades and locations
+  // get routes using grades and crags
   const routeQuery = `
     select id,name from routes
       where
@@ -123,4 +124,13 @@ async function dbTestSearch2() {
   console.log(routeRows);
 }
 
-dbTestSearch2();
+async function renameTable() {
+  const db = await dbLoadPublic();
+  const query = `
+    alter table locations
+    rename to crags
+    `;
+  await dbRun(db, query);
+}
+
+renameTable();

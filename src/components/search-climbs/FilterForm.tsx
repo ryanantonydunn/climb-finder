@@ -1,166 +1,16 @@
 "use client";
 
-import {
-  ClimbingGradeRange,
-  ClimbingGrades,
-  ClimbingRouteSearchFilters,
-  ClimbingRouteSortKey,
-  ClimbingSearchForm,
-  ClimbingSearchLocationType,
-  SortDirection,
-} from "@/store/types";
-import React from "react";
+import { RouteSearchFormHook, Grades, RouteSearchFn } from "@/store/types";
 
 interface FilterFormProps {
-  search: (filters: ClimbingRouteSearchFilters) => void;
-  grades: ClimbingGrades | null;
+  search: RouteSearchFn;
+  grades: Grades | null;
+  form: RouteSearchFormHook;
 }
 
-/**
- * Extract the grade range object from the query string
- * Eg: 1,3,4-2,4,5 => { 1: [3,4], 2: [4,5] }
- */
-function getGradeRangesFromUrlVar(str: string): ClimbingGradeRange {
-  if (!str) return {};
-  return Object.fromEntries(
-    str.split("-").map((subStr) => {
-      const [id, start, end] = subStr.split(",");
-      return [Number(id), [Number(start), Number(end)]];
-    })
-  );
-}
-
-/**
- * Prepare the grade range object for the query string
- * Eg: { 1: [3,4], 2: [4,5] } => 1,3,4-2,4,5
- */
-function getUrlVarFromGradeRanges(ranges: ClimbingGradeRange): string {
-  return Object.entries(ranges)
-    .map(([id, [start, end]]) => `${id},${start},${end}`)
-    .join("-");
-}
-
-/**
- * Set the query string in the URL from the form values
- */
-
-function setQueryStringFromForm(form: ClimbingSearchForm) {
-  const url = new URL(window.location.href);
-  Object.entries(form).forEach(([key, value]) => {
-    if (key === "gradeRanges") {
-      url.searchParams.set(key, getUrlVarFromGradeRanges(value));
-    } else if (key === "heightIncludeZero") {
-      if (value) {
-        url.searchParams.set(key, "true");
-      } else {
-        url.searchParams.delete(key);
-      }
-    } else {
-      url.searchParams.set(key, value);
-    }
-  });
-  history.pushState({}, "", url);
-}
-
-/**
- * Get the initial form values with defaults or from the query string
- */
-function getInitialForm(): ClimbingSearchForm {
-  const params = new URLSearchParams(window.location.search);
-  const cragIds = params.get("cragIds");
-  return {
-    locationType: (params.get("locationType") ||
-      "map") as ClimbingSearchLocationType,
-    gradeRanges: getGradeRangesFromUrlVar(params.get("gradeRanges") || ""),
-    lat: Number(params.get("lat") || 53.74312),
-    long: Number(params.get("long") || -2.01056),
-    routeNameFilter: params.get("routeNameFilter") || "",
-    cragIds: cragIds ? cragIds.split(",").map((id) => Number(id)) : [],
-    distanceMax: Number(params.get("distanceMax") || 0.05),
-    starsMin: Number(params.get("starsMin") || 0),
-    starsMax: Number(params.get("starsMax") || 3),
-    heightMin: Number(params.get("heightMin") || 0),
-    heightMax: Number(params.get("heightMax") || 10000),
-    heightIncludeZero: !params.get("heightIncludeZero") ? false : true,
-    sortDirection: (params.get("sortDirection") || "asc") as SortDirection,
-    sortKey: (params.get("sortKey") || "id") as ClimbingRouteSortKey,
-  };
-}
-
-export function FilterForm({ search, grades }: FilterFormProps) {
-  const [form, setFormRaw] = React.useState<ClimbingSearchForm | undefined>();
-  const setForm = React.useCallback(
-    (newFormItems: Partial<ClimbingSearchForm>) => {
-      setFormRaw((f) => (f ? { ...f, ...newFormItems } : undefined));
-    },
-    []
-  );
-  React.useEffect(() => {
-    setFormRaw(getInitialForm());
-  }, []);
-
-  /**
-   * Reference object for all grade ID's available
-   * Eg: { 2: [3,4,5], ... } // where 2 is 'Trad' and 3,4,5 are 'S','HS','VS'
-   */
-  const allGrades = React.useMemo(() => {
-    if (grades) {
-      return Object.fromEntries(
-        grades.gradeTypes.map((t) => [
-          t.id,
-          grades.grades
-            .filter((g) => g.gradetype === t.id)
-            .sort((a, b) => a.score - b.score)
-            .map((g) => g.id),
-        ])
-      );
-    }
-    return null;
-  }, [grades]);
-
-  /**
-   * Get compiled filters to search from form state
-   */
-  const getFiltersFromForm = React.useCallback(
-    (form: ClimbingSearchForm): ClimbingRouteSearchFilters | undefined => {
-      if (!allGrades) return;
-
-      // get all grades from the ranges
-      const grades: number[] = [];
-      Object.entries(form.gradeRanges).forEach(([id, [start, end]]) => {
-        const gradeTypeId = Number(id);
-        grades.push(...allGrades[gradeTypeId].slice(start, end + 1));
-      });
-
-      // duplicate all relevant fields
-      const { locationType, gradeRanges, ...sharedValues } = form;
-      if (locationType !== "crags") {
-        sharedValues.cragIds = [];
-      }
-
-      return {
-        ...sharedValues,
-        grades,
-      };
-    },
-    [allGrades]
-  );
-
-  /**
-   * Run the search
-   */
-  const runSearch = React.useCallback(() => {
-    if (!form) return;
-    const filters = getFiltersFromForm(form);
-    if (!filters) return;
-    setQueryStringFromForm(form);
-    search(filters);
-  }, [form, getFiltersFromForm, search]);
-
-  /**
-   * Render form
-   */
-  if (!grades || !allGrades || !form) return "Loading...";
+export function FilterForm({ search, grades, form: formObj }: FilterFormProps) {
+  if (!grades || !grades.idsByType || !formObj.form) return "Loading...";
+  const { form, setForm } = formObj;
 
   return (
     <div className="p-2 pb-6 text-xs">
@@ -195,7 +45,7 @@ export function FilterForm({ search, grades }: FilterFormProps) {
             <input
               className="w-4 h-4 mr-2"
               type="radio"
-              value="crags"
+              value="locationNames"
               checked={form.locationType === "crags"}
               onChange={() => {
                 setForm({ locationType: "crags" });
@@ -277,7 +127,7 @@ export function FilterForm({ search, grades }: FilterFormProps) {
       <div className="mb-2">
         <h2 className="mb-2 font-bold text-base">Climbing types</h2>
         {grades.gradeTypes.map((gradeType) => {
-          const all = allGrades[gradeType.id];
+          const all = grades.idsByType[gradeType.id];
           const range = form.gradeRanges[gradeType.id];
           return (
             <label
@@ -316,7 +166,7 @@ export function FilterForm({ search, grades }: FilterFormProps) {
         )}
         {Object.entries(form.gradeRanges).map(([typeId, [start, end]]) => {
           const gradeTypeId = Number(typeId);
-          const all = allGrades[gradeTypeId];
+          const all = grades.idsByType[gradeTypeId];
           const gradeTypeName =
             grades.gradeTypes.find((g) => g.id === gradeTypeId)?.name || "";
           return (
@@ -493,7 +343,7 @@ export function FilterForm({ search, grades }: FilterFormProps) {
       </div>
       <button
         className="w-full p-2 bg-green-800 rounded"
-        onClick={() => runSearch()}
+        onClick={() => search(form, grades.idsByType)}
       >
         Search
       </button>

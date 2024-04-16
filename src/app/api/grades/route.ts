@@ -1,13 +1,6 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { dbLoad, unique } from "../helpers";
-import {
-  ClimbingGrade,
-  ClimbingGradeType,
-  ClimbingRoute,
-  ClimbingRouteSearchFilters,
-  Location,
-} from "@/store/types";
+import { Grade, GradeType } from "@/store/types";
 import { NextResponse } from "next/server";
+import { dbLoad } from "../helpers";
 
 /**
  * Temporary available grades for searching
@@ -36,7 +29,7 @@ export async function GET(req: Request) {
           gradetype in (${gradetypes}) and
           gradesystem in (${gradeSystems})
         `;
-    const gradeRows = await db.all<ClimbingGrade[]>(gradeQuery);
+    const gradeRows = await db.all<Grade[]>(gradeQuery);
 
     /**
      * Get grade types
@@ -46,7 +39,7 @@ export async function GET(req: Request) {
         where
           id in (${gradetypes})
     `;
-    const gradeTypeRows = await db.all<ClimbingGradeType[]>(gradeTypeQuery);
+    const gradeTypeRows = await db.all<GradeType[]>(gradeTypeQuery);
 
     // return data
     const result = {
