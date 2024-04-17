@@ -1,6 +1,19 @@
 "use client";
 
 import { useStore } from "@/store/store";
+import { RouteSearchLocationType } from "@/store/types";
+import React from "react";
+import { Button } from "../base/Button";
+import { Label } from "../base/Label";
+import { Select } from "../base/Select";
+import { Tag } from "../base/Tag";
+import { TextInput } from "../base/TextInput";
+
+const locationTypes = [
+  ["map", "Map"],
+  ["latlong", "Lat/Long"],
+  ["crags", "Crags"],
+];
 
 export function FilterForm() {
   const { grades: gradesRef, form, setForm, search } = useStore();
@@ -8,106 +21,86 @@ export function FilterForm() {
   if (!gradesRef) return "Loading...";
 
   return (
-    <div className="p-2 pb-6 text-xs">
-      <div className="mb-2">
-        <h2 className="mb-2 font-bold text-base">Location</h2>
-        <div className="mb-2">
-          <label className="inline-block mb-1 mr-1 p-1 px-2 bg-gray-700 rounded whitespace-nowrap">
-            <input
-              className="w-3 h-3 mr-1"
-              type="radio"
-              value="search"
-              checked={form.locationType === "map"}
-              onChange={() => {
-                setForm({ locationType: "map" });
+    <div className="pb-6 text-xs">
+      <div className="p-2 pb-0 border-b border-slate-300">
+        <Label>Location</Label>
+        {locationTypes.map(([key, name]) => (
+          <React.Fragment key={key}>
+            <Tag
+              className="mr-1 mb-2"
+              checked={form.locationType === key}
+              onClick={() => {
+                setForm({ locationType: key as RouteSearchLocationType });
               }}
-            />
-            Search
-          </label>
-          <label className="inline-block mb-1 mr-1 p-1 px-2 bg-gray-700 rounded whitespace-nowrap">
-            <input
-              className="w-3 h-3 mr-1"
-              type="radio"
-              value="latlong"
-              checked={form.locationType === "latlong"}
-              onChange={() => {
-                setForm({ locationType: "latlong" });
-              }}
-            />
-            Lat/Long
-          </label>
-          <label className="inline-block mb-1 mr-1 p-1 px-2 bg-gray-700 rounded whitespace-nowrap">
-            <input
-              className="w-3 h-3 mr-1"
-              type="radio"
-              value="crags"
-              checked={form.locationType === "crags"}
-              onChange={() => {
-                setForm({ locationType: "crags" });
-              }}
-            />
-            Crags
-          </label>
-        </div>
+            >
+              {name}
+            </Tag>
+          </React.Fragment>
+        ))}
         {form.locationType === "map" && (
-          <div className="mb-2">
-            <label>Search by location</label>
-            <br />
-            <input
-              className="bg-gray-700 p-1"
-              type="text"
-              value={"howdy"}
-              onChange={(e) => {
-                console.log("TODO");
-              }}
-            />
-          </div>
+          <TextInput
+            id="search-location"
+            label="Search by location"
+            showLabel={false}
+            iconLeft={<>&#128269;</>}
+            value={"howdy"}
+            onChange={(e) => {
+              console.log("TODO");
+            }}
+          />
         )}
         {form.locationType === "latlong" && (
-          <div className="mb-2">
-            <label>Search by lat/long position</label>
-            <div className="flex mb-2">
-              <div>
-                <input
-                  className="bg-gray-700 p-1"
-                  type="text"
-                  value={form.lat}
-                  onChange={(e) => {
-                    setForm({
-                      lat: Number(e.currentTarget.value),
-                    });
-                  }}
-                />
-              </div>
-              <div>
-                <input
-                  className="bg-gray-600 p-1"
-                  type="text"
-                  value={form.long}
-                  onChange={(e) => {
-                    setForm({
-                      long: Number(e.currentTarget.value),
-                    });
-                  }}
-                />
-              </div>
+          <div className="flex gap-1">
+            <div className="flex-grow">
+              <TextInput
+                id="lat"
+                label="Latitude"
+                showLabel={false}
+                value={form.lat}
+                onChange={(e) => {
+                  setForm({
+                    lat: Number(e.currentTarget.value),
+                  });
+                }}
+              />
+            </div>
+            <div className="flex-grow">
+              <TextInput
+                id="long"
+                label="Longitude"
+                showLabel={false}
+                value={form.long}
+                onChange={(e) => {
+                  setForm({
+                    long: Number(e.currentTarget.value),
+                  });
+                }}
+              />
             </div>
           </div>
         )}
         {form.locationType === "crags" && (
-          <div className="mb-2">
-            <label>Search crags</label>
-            <br />
-            <input className="bg-gray-600 p-1" type="text" />
-          </div>
+          <TextInput
+            id="search-crags"
+            label="Search by crags"
+            showLabel={false}
+            iconLeft={<>&#128269;</>}
+            value={"crags"}
+            onChange={(e) => {
+              console.log("TODO");
+            }}
+          />
         )}
         {["latlong", "map"].includes(form.locationType) && (
-          <div className="mb-2">
-            <label>Distance</label>
-            <br />
-            <input
-              className="bg-gray-600 p-1"
-              type="text"
+          <div className="flex items-center">
+            <div>Within</div>
+            <TextInput
+              containerClassName="mx-2"
+              className="w-24"
+              type="number"
+              id="distance"
+              label="Maximum distance"
+              showLabel={false}
               value={form.distanceMax}
               onChange={(e) => {
                 setForm({
@@ -115,102 +108,103 @@ export function FilterForm() {
                 });
               }}
             />
-            &nbsp; km
+            <div>km</div>
           </div>
         )}
       </div>
-      <div className="mb-4">
-        <h2 className="mb-2 font-bold text-base">Grade ranges</h2>
+      <div className="p-2 border-b border-slate-300">
+        <Label>Grade ranges</Label>
         {form.gradeRanges.map((range, i) => {
           const gradeType = gradesRef.systemTypes[range.system];
           const { gradeIds, grades } =
             gradesRef.types[gradeType].systems[range.system];
           return (
-            <div key={i} className="mb-2 flex gap-2">
-              <div className="flex-grow">
-                <select
-                  className="bg-gray-600 p-1 w-full"
-                  value={range.system}
-                  onChange={(e) => {
-                    const newSystemId = Number(e.currentTarget.value);
-                    const newSystemType = gradesRef.systemTypes[newSystemId];
-                    const newSystem =
-                      gradesRef.types[newSystemType].systems[newSystemId];
-                    const newRanges = [...form.gradeRanges];
-                    newRanges[i] = {
-                      system: Number(e.currentTarget.value),
-                      start: 0,
-                      end: newSystem.gradeIds.length - 1,
-                    };
-                    setForm({ gradeRanges: newRanges });
-                  }}
-                >
-                  {Object.entries(gradesRef.types).map(([typeId, type], i) => (
-                    <optgroup key={typeId} label={type.name}>
-                      {Object.entries(type.systems).map(
-                        ([systemId, system]) => (
-                          <option key={systemId} value={systemId}>
-                            {type.name !== system.name
-                              ? `${type.name}: ${system.name}`
-                              : system.name}
-                          </option>
-                        )
-                      )}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
+            <div key={i} className="flex gap-1">
+              <Select
+                containerClassName="flex-grow"
+                id={`range-${i}-type`}
+                label="Climbing type"
+                showLabel={false}
+                value={range.system}
+                onChange={(e) => {
+                  const newSystemId = Number(e.currentTarget.value);
+                  const newSystemType = gradesRef.systemTypes[newSystemId];
+                  const newSystem =
+                    gradesRef.types[newSystemType].systems[newSystemId];
+                  const newRanges = [...form.gradeRanges];
+                  newRanges[i] = {
+                    system: Number(e.currentTarget.value),
+                    start: 0,
+                    end: newSystem.gradeIds.length - 1,
+                  };
+                  setForm({ gradeRanges: newRanges });
+                }}
+              >
+                {Object.entries(gradesRef.types).map(([typeId, type], i) => (
+                  <optgroup key={typeId} label={type.name}>
+                    {Object.entries(type.systems).map(([systemId, system]) => (
+                      <option key={systemId} value={systemId}>
+                        {type.name !== system.name
+                          ? `${type.name}: ${system.name}`
+                          : system.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </Select>
+              <Select
+                containerClassName="w-24"
+                id={`range-${i}-min`}
+                label="Grade minimum"
+                showLabel={false}
+                value={range.start}
+                onChange={(e) => {
+                  const newRanges = [...form.gradeRanges];
+                  newRanges[i] = {
+                    ...newRanges[i],
+                    start: Number(e.currentTarget.value),
+                  };
+                  setForm({ gradeRanges: newRanges });
+                }}
+              >
+                {gradeIds.map((gradeId, gradeIdIndex) => (
+                  <option
+                    key={gradeIdIndex}
+                    value={gradeIdIndex}
+                    disabled={range.end < gradeIdIndex}
+                  >
+                    {grades[gradeId].name}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                containerClassName="w-24"
+                id={`range-${i}-max`}
+                label="Grade maximum"
+                showLabel={false}
+                value={range.end}
+                onChange={(e) => {
+                  const newRanges = [...form.gradeRanges];
+                  newRanges[i] = {
+                    ...newRanges[i],
+                    end: Number(e.currentTarget.value),
+                  };
+                  setForm({ gradeRanges: newRanges });
+                }}
+              >
+                {gradeIds.map((gradeId, gradeIdIndex) => (
+                  <option
+                    key={gradeIdIndex}
+                    value={gradeIdIndex}
+                    disabled={range.start > gradeIdIndex}
+                  >
+                    {grades[gradeId].name}
+                  </option>
+                ))}
+              </Select>
               <div>
-                <select
-                  className="bg-gray-600 p-1 w-full"
-                  value={range.start}
-                  onChange={(e) => {
-                    const newRanges = [...form.gradeRanges];
-                    newRanges[i] = {
-                      ...newRanges[i],
-                      start: Number(e.currentTarget.value),
-                    };
-                    setForm({ gradeRanges: newRanges });
-                  }}
-                >
-                  {gradeIds.map((gradeId, gradeIdIndex) => (
-                    <option
-                      key={gradeIdIndex}
-                      value={gradeIdIndex}
-                      disabled={range.end < gradeIdIndex}
-                    >
-                      {grades[gradeId].name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <select
-                  className="bg-gray-600 p-1 w-full"
-                  value={range.end}
-                  onChange={(e) => {
-                    const newRanges = [...form.gradeRanges];
-                    newRanges[i] = {
-                      ...newRanges[i],
-                      end: Number(e.currentTarget.value),
-                    };
-                    setForm({ gradeRanges: newRanges });
-                  }}
-                >
-                  {gradeIds.map((gradeId, gradeIdIndex) => (
-                    <option
-                      key={gradeIdIndex}
-                      value={gradeIdIndex}
-                      disabled={range.start > gradeIdIndex}
-                    >
-                      {grades[gradeId].name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <button
-                  className="bg-gray-800 rounded py-1 px-2"
+                <Button
+                  variant="utility"
                   aria-label="remove"
                   onClick={() => {
                     const newRanges = [...form.gradeRanges];
@@ -219,13 +213,13 @@ export function FilterForm() {
                   }}
                 >
                   &#x2715;
-                </button>
+                </Button>
               </div>
             </div>
           );
         })}
-        <button
-          className="bg-gray-700 rounded py-1 px-2"
+        <Button
+          variant="utility"
           onClick={() => {
             const newRanges = [
               ...form.gradeRanges,
@@ -235,123 +229,104 @@ export function FilterForm() {
           }}
         >
           + Add
-        </button>
+        </Button>
       </div>
-      <div className="mb-2">
-        <h2 className="mb-2 font-bold text-base">Height</h2>
-        <div className="flex mb-2 gap-2">
-          <div>
-            <label>Min height</label>
-            <br />
-            <input
-              className="bg-gray-600 p-1"
-              type="number"
-              value={form.heightMin}
-              onChange={(e) => {
-                const newNum = Math.min(
-                  Number(e.currentTarget.value),
-                  form.heightMax
-                );
-                setForm({
-                  heightMin: newNum,
-                });
-              }}
-            />
-          </div>
-          <div>
-            <label>Max height</label>
-            <br />
-            <input
-              className="bg-gray-600 p-1"
-              type="number"
-              value={form.heightMax}
-              onChange={(e) => {
-                const newNum = Math.max(
-                  Number(e.currentTarget.value),
-                  form.heightMin
-                );
-                setForm({
-                  heightMax: newNum,
-                });
-              }}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="mb-2">
-        <label className="block mb-1 mr-1 p-1 whitespace-nowrap">
-          <input
-            className="bg-gray-600 p-1 w-4 h-4 mr-2"
-            type="checkbox"
-            checked={form.heightIncludeZero}
-            onChange={() =>
+      <div className="p-2 border-b border-slate-300">
+        <div className="flex gap-1">
+          <TextInput
+            containerClassName="flex-grow"
+            id="min-height"
+            label="Min height"
+            type="number"
+            value={form.heightMin}
+            onChange={(e) => {
+              const newNum = Math.min(
+                Number(e.currentTarget.value),
+                form.heightMax
+              );
               setForm({
-                heightIncludeZero: !form.heightIncludeZero,
-              })
-            }
+                heightMin: newNum,
+              });
+            }}
           />
+          <TextInput
+            containerClassName="flex-grow"
+            id="max-height"
+            label="Max height"
+            type="number"
+            value={form.heightMax}
+            onChange={(e) => {
+              const newNum = Math.max(
+                Number(e.currentTarget.value),
+                form.heightMax
+              );
+              setForm({
+                heightMax: newNum,
+              });
+            }}
+          />
+        </div>
+        <Tag
+          checked={form.heightIncludeZero}
+          onClick={() =>
+            setForm({
+              heightIncludeZero: !form.heightIncludeZero,
+            })
+          }
+        >
           Include routes with no height data
-        </label>
+        </Tag>
       </div>
-      <div className="mb-2">
-        <h2 className="mb-2 font-bold text-base">Stars</h2>
-        <div className="flex mb-2 gap-2">
-          <div>
-            <label>Min stars</label>
-            <br />
-            <select
-              className="bg-gray-600 p-1"
-              value={form.starsMin}
-              onChange={(e) => {
-                setForm({ starsMin: Number(e.currentTarget.value) });
-              }}
-            >
-              {Array.from({ length: 4 }).map((_, i) => (
-                <option key={i} value={i} disabled={form.starsMax < i}>
-                  {i}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label>Max stars</label>
-            <br />
-            <select
-              className="bg-gray-600 p-1"
-              value={form.starsMax}
-              onChange={(e) => {
-                setForm({ starsMax: Number(e.currentTarget.value) });
-              }}
-            >
-              {Array.from({ length: 4 }).map((_, i) => (
-                <option key={i} value={i} disabled={form.starsMin > i}>
-                  {i}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="p-2 border-b border-slate-300">
+        <div className="flex gap-1">
+          <Select
+            containerClassName="flex-grow"
+            id="min-stars"
+            label="Min stars"
+            value={form.starsMin}
+            onChange={(e) => {
+              setForm({ starsMin: Number(e.currentTarget.value) });
+            }}
+          >
+            {Array.from({ length: 4 }).map((_, i) => (
+              <option key={i} value={i} disabled={form.starsMax < i}>
+                {i}
+              </option>
+            ))}
+          </Select>
+          <Select
+            containerClassName="flex-grow"
+            id="max-stars"
+            label="Max stars"
+            value={form.starsMax}
+            onChange={(e) => {
+              setForm({ starsMax: Number(e.currentTarget.value) });
+            }}
+          >
+            {Array.from({ length: 4 }).map((_, i) => (
+              <option key={i} value={i} disabled={form.starsMin > i}>
+                {i}
+              </option>
+            ))}
+          </Select>
         </div>
       </div>
-      <div className="mb-4">
-        <h2 className="mb-2 font-bold text-base">Search route names</h2>
-        <input
-          className="bg-gray-600 p-1"
-          type="text"
+      <div className="p-2 pb-0 border-b border-slate-300">
+        <TextInput
+          containerClassName="flex-grow"
+          id="route-name-filter"
+          label="Route name filter"
           value={form.routeNameFilter}
           onChange={(e) => {
             setForm({
               routeNameFilter: e.currentTarget.value,
             });
           }}
-          aria-label="Search route names"
         />
       </div>
-      <button
-        className="w-full p-2 bg-green-800 rounded"
-        onClick={() => search()}
-      >
-        Search
-      </button>
+      <div className="p-2 pb-6">
+        <Button onClick={() => search()}>Search</Button>
+      </div>
     </div>
   );
 }

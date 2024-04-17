@@ -2,19 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-foreground: 20, 20, 20;
-  --color-background: 214, 219, 220;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-foreground: 214, 219, 220;
-    --color-background: 0, 0, 0;
-  }
-}
-
 body {
-  color: rgb(var(--color-foreground));
-  background: rgb(var(--color-background));
+  margin: 0;
 }

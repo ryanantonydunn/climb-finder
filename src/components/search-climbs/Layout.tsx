@@ -4,66 +4,55 @@ import { useGrades } from "@/store/hooks";
 import React from "react";
 import { FilterForm } from "./FilterForm";
 import { ResultsList } from "./ResultsList";
-
-type Layout = [boolean, boolean, boolean];
-const initialLayout: Layout = [true, false, true];
+import { Tag } from "../base/Tag";
+import { Map } from "./Map";
 
 export function Layout() {
   useGrades();
-  const [layout, setLayout] = React.useState<Layout>(initialLayout);
-  const [showList, showMap, showFilters] = layout;
+  const [showList, setShowList] = React.useState(true);
+  const [showMap, setShowMap] = React.useState(true);
+  const [showFilters, setShowFilters] = React.useState(true);
 
   return (
-    <div className="h-screen w-full absolute flex flex-col gap-px">
-      <header className="flex bg-gray-900">
-        <button
-          className="p-2"
-          onClick={() => {
-            setLayout([
-              !showList,
-              !showMap && !showList ? true : showMap,
-              showFilters,
-            ]);
-          }}
+    <div className="h-screen w-full absolute flex flex-col text-xs">
+      <header className="flex items-center bg-slate-100 border-b border-slate-300 p-1">
+        <Tag onClick={() => setShowList(!showList)} checked={showList}>
+          List
+        </Tag>
+        <Tag
+          className="ml-1"
+          onClick={() => setShowMap(!showMap)}
+          checked={showMap}
         >
-          List {showList && "*"}
-        </button>
-        <button
-          className="p-2"
-          onClick={() => {
-            setLayout([
-              !showMap && !showList ? true : showList,
-              !showMap,
-              showFilters,
-            ]);
-          }}
+          Map
+        </Tag>
+        <Tag
+          className="ml-auto"
+          onClick={() => setShowFilters(!showFilters)}
+          checked={showFilters}
         >
-          Map {showMap && "*"}
-        </button>
-        <button
-          className="ml-auto p-2"
-          onClick={() => {
-            setLayout([showMap, showList, !showFilters]);
-          }}
-        >
-          Filters {showFilters && "*"}
-        </button>
+          Filters
+        </Tag>
       </header>
-      <main className="flex flex-grow gap-px">
-        <section className="flex flex-grow gap-px overflow-y-auto">
+      <div className="flex-grow relative">
+        <main className="absolute w-full h-full flex">
           {showList && (
-            <div className="flex-grow h-full bg-gray-900">
+            <section className="flex-1 h-full overflow-auto border-r border-slate-300">
               <ResultsList />
-            </div>
+            </section>
           )}
-          {showMap && <div className="flex-grow h-full bg-gray-900">Map</div>}
-        </section>
-        {showFilters && (
-          <section className="w-80 bg-gray-900 overflow-y-auto">
-            <FilterForm />
-          </section>
-        )}
-      </main>
+          {showMap && (
+            <section className="flex-1 h-full overflow-hidden border-r border-slate-300">
+              <Map />
+            </section>
+          )}
+          {showFilters && (
+            <section className="w-80 h-full overflow-y-auto">
+              <FilterForm />
+            </section>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
