@@ -2,13 +2,16 @@
 
 import { useGrades } from "@/store/hooks";
 import React from "react";
-import { FilterForm } from "./FilterForm";
-import { ResultsList } from "./ResultsList";
+import { Loading } from "../base/Loading";
 import { Tag } from "../base/Tag";
+import { FilterForm } from "./FilterForm";
 import { Map } from "./Map";
+import { ResultsList } from "./ResultsList";
+import { useStore } from "@/store/store";
 
 export function Layout() {
   useGrades();
+  const { grades, isSearching } = useStore();
   const [showList, setShowList] = React.useState(true);
   const [showMap, setShowMap] = React.useState(true);
   const [showFilters, setShowFilters] = React.useState(true);
@@ -51,6 +54,7 @@ export function Layout() {
               <FilterForm />
             </section>
           )}
+          <Loading isActive={!grades || isSearching} />
         </main>
       </div>
     </div>

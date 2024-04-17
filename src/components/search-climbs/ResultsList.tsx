@@ -47,14 +47,12 @@ export function ResultsList() {
               }
             >
               {header.name}
-              {form.sortKey === header.sortKey &&
-                form.sortDirection === "asc" && (
-                  <span className="ml-2">&uarr;</span>
-                )}
-              {form.sortKey === header.sortKey &&
-                form.sortDirection === "desc" && (
-                  <span className="ml-2">&darr;</span>
-                )}
+              <span className="inline-block w-2 ml-1">
+                {form.sortKey === header.sortKey &&
+                  form.sortDirection === "asc" && <>&uarr;</>}
+                {form.sortKey === header.sortKey &&
+                  form.sortDirection === "desc" && <>&darr;</>}
+              </span>
             </Th>
           ))}
         </tr>
@@ -115,13 +113,13 @@ function Th({ onClick, children }: ThProps) {
     <th>
       <button
         type="button"
-        className="block w-full px-2 py-3 text-left"
+        className="block w-full px-2 py-3 text-left whitespace-nowrap"
         onClick={onClick}
       >
         {children}
       </button>
     </th>
   ) : (
-    <th className="p-1 text-left">{children}</th>
+    <th className="px-2 text-left whitespace-nowrap">{children}</th>
   );
 }
