@@ -1,6 +1,6 @@
 "use client";
 
-import { useGrades } from "@/store/hooks";
+import { useForm, useGrades } from "@/store/hooks";
 import React from "react";
 import { Loading } from "../base/Loading";
 import { Tag } from "../base/Tag";
@@ -11,6 +11,7 @@ import { useStore } from "@/store/store";
 
 export function Layout() {
   useGrades();
+  useForm();
   const { grades, isSearching } = useStore();
   const [showList, setShowList] = React.useState(true);
   const [showMap, setShowMap] = React.useState(true);

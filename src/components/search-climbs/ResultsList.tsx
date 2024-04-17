@@ -16,7 +16,7 @@ const headers = [
 
 export function ResultsList() {
   const { results, grades: gradesRef, form, setForm, search } = useStore();
-  if (!gradesRef) {
+  if (!gradesRef || !form) {
     return <div className="px-2 py-4">Loading...</div>;
   }
   if (!results || !results.routes.length) {

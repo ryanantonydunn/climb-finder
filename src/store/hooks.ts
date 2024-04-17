@@ -10,3 +10,13 @@ export function useGrades() {
     loadGrades();
   }, [loadGrades]);
 }
+
+/**
+ * Initialise form object
+ */
+export function useForm() {
+  const initForm = useStore((state) => state.initForm);
+  React.useEffect(() => {
+    initForm();
+  }, [initForm]);
+}

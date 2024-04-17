@@ -17,8 +17,9 @@ const locationTypes = [
 
 export function FilterForm() {
   const { grades: gradesRef, form, setForm, search } = useStore();
-
-  if (!gradesRef) return "Loading...";
+  if (!gradesRef || !form) {
+    return <div className="px-2 py-4">Loading...</div>;
+  }
 
   return (
     <div className="pb-6 text-xs">
