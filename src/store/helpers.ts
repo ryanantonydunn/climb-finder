@@ -31,6 +31,10 @@ export function getInitialForm(): RouteSearchForm {
     heightMax: Number(params.get("heightMax") || 10000),
     heightIncludeZero:
       params.get("heightIncludeZero") === "false" ? false : true,
+    pitchesMin: Number(params.get("pitchesMin") || 0),
+    pitchesMax: Number(params.get("pitchesMax") || 100),
+    pitchesIncludeZero:
+      params.get("pitchesIncludeZero") === "false" ? false : true,
     sortDirection: (params.get("sortDirection") || "asc") as SortDirection,
     sortKey: (params.get("sortKey") || "id") as RouteSearchSortKey,
   };
@@ -45,6 +49,8 @@ export async function setQueryStringFromForm(form: RouteSearchForm) {
     if (key === "gradeRanges") {
       url.searchParams.set(key, getUrlVarFromGradeRanges(value));
     } else if (key === "heightIncludeZero") {
+      url.searchParams.set(key, value ? "true" : "false");
+    } else if (key === "pitchesIncludeZero") {
       url.searchParams.set(key, value ? "true" : "false");
     } else {
       url.searchParams.set(key, value);
@@ -135,6 +141,7 @@ export async function search(
     body: JSON.stringify({ filters }),
   });
   const json = (await res.json()) as RouteSearchResults;
+  console.log(json);
   return json;
 }
 

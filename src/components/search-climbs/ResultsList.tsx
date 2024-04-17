@@ -9,6 +9,7 @@ const headers = [
   { name: "Grade", sortKey: "gradescore" },
   { name: "Stars", sortKey: "stars" },
   { name: "Height", sortKey: "height" },
+  { name: "Pitches", sortKey: "pitches" },
   { name: "Crag", sortKey: "crag_name" },
   { name: "Distance" },
 ];
@@ -83,6 +84,9 @@ export function ResultsList() {
             </td>
             <td className="py-1 px-2 whitespace-nowrap">
               {route.height === 0 ? "-" : `${route.height}m`}
+            </td>
+            <td className="py-1 px-2 whitespace-nowrap">
+              {route.height === 0 ? "-" : `${route.pitches}`}
             </td>
             <td>
               <Link

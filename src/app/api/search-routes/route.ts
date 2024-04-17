@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         select * from crags
           where id in (${filters.cragIds.join(",")})
           ${cragOrderBy}
-          limit 400
+          limit 3000
       `;
     } else {
       // search by lat/long
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         select * from crags
           where ${distanceQueryString} < ${distance}${cragSort}
           ${cragOrderBy}
-          limit 200
+          limit 3000
       `;
     }
     const cragRows = await db.all<Crag[]>(cragQuery);
@@ -57,6 +57,7 @@ export async function POST(req: Request) {
       "gradesystem",
       "gradescore",
       "height",
+      "pitches",
       "crag_id",
     ].join(",");
 
@@ -69,6 +70,12 @@ export async function POST(req: Request) {
     const heightFilter = filters.heightIncludeZero
       ? heightFilterWithZero
       : heightFilterBase;
+
+    const pitchesFilterBase = `pitches >= ${filters.pitchesMin} and pitches <= ${filters.pitchesMax}`;
+    const pitchesFilterWithZero = `id in (select id from routes where (pitches = 1 and height != 0) or ${pitchesFilterBase})`;
+    const pitchesFilter = filters.pitchesIncludeZero
+      ? pitchesFilterWithZero
+      : pitchesFilterBase;
 
     const routeName = filters.routeNameFilter
       ? `name like '%${filters.routeNameFilter}%' and`
@@ -86,7 +93,8 @@ export async function POST(req: Request) {
           stars <= ${filters.starsMax} and
           ${routeName}
           ${gradeFilter}
-          ${heightFilter}
+          ${heightFilter} and
+          ${pitchesFilter}
         order by ${routeSort} ${filters.sortDirection}
         limit 200
       `;

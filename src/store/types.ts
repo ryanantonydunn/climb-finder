@@ -27,6 +27,9 @@ export interface RouteSearchFilters {
   heightMin: number;
   heightMax: number;
   heightIncludeZero: boolean;
+  pitchesMin: number;
+  pitchesMax: number;
+  pitchesIncludeZero: boolean;
   sortDirection: SortDirection;
   sortKey: RouteSearchSortKey;
   grades: number[];
@@ -63,6 +66,7 @@ export interface Route {
   gradesystem: number;
   height: number;
   crag_id: number;
+  pitches: number;
 }
 
 export interface RouteSearchResults {

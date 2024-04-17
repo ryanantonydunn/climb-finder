@@ -258,7 +258,7 @@ export function FilterForm() {
             onChange={(e) => {
               const newNum = Math.max(
                 Number(e.currentTarget.value),
-                form.heightMax
+                form.heightMin
               );
               setForm({
                 heightMax: newNum,
@@ -275,6 +275,52 @@ export function FilterForm() {
           }
         >
           Include routes with no height data
+        </Tag>
+      </div>
+      <div className="p-2 border-b border-slate-300">
+        <div className="flex gap-1">
+          <TextInput
+            containerClassName="flex-grow"
+            id="min-pitches"
+            label="Min pitches"
+            type="number"
+            value={form.pitchesMin}
+            onChange={(e) => {
+              const newNum = Math.min(
+                Number(e.currentTarget.value),
+                form.pitchesMax
+              );
+              setForm({
+                pitchesMin: newNum,
+              });
+            }}
+          />
+          <TextInput
+            containerClassName="flex-grow"
+            id="max-pitches"
+            label="Max pitches"
+            type="number"
+            value={form.pitchesMax}
+            onChange={(e) => {
+              const newNum = Math.max(
+                Number(e.currentTarget.value),
+                form.pitchesMin
+              );
+              setForm({
+                pitchesMax: newNum,
+              });
+            }}
+          />
+        </div>
+        <Tag
+          checked={form.pitchesIncludeZero}
+          onClick={() =>
+            setForm({
+              pitchesIncludeZero: !form.pitchesIncludeZero,
+            })
+          }
+        >
+          Include routes with no pitch data
         </Tag>
       </div>
       <div className="p-2 border-b border-slate-300">
