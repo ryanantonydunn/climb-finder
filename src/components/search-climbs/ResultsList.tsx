@@ -1,5 +1,6 @@
 "use client";
 
+import { useStore } from "@/store/store";
 import {
   RouteSearchFormHook,
   RouteSearchResults,
@@ -7,13 +8,6 @@ import {
   RouteSearchForm,
   GradesRef,
 } from "@/store/types";
-
-interface ResultsListProps {
-  results: RouteSearchResults | null;
-  gradesRef: GradesRef | null;
-  form: RouteSearchFormHook;
-  search: RouteSearchFn;
-}
 
 const headers = [
   { name: "Name", sortKey: "name" },
@@ -24,16 +18,14 @@ const headers = [
   { name: "Distance" },
 ];
 
-export function ResultsList({
-  results,
-  gradesRef,
-  form: formObj,
-  search,
-}: ResultsListProps) {
-  if (!results || !gradesRef || !formObj.form) {
+export function ResultsList() {
+  const { results, grades: gradesRef, form, setForm, search } = useStore();
+  if (!gradesRef) {
+    return <div>Loading...</div>;
+  }
+  if (!results) {
     return <div>No results to display...</div>;
   }
-  const { form, setForm } = formObj;
 
   return (
     <table className="p-2 text-xs">
@@ -55,7 +47,7 @@ export function ResultsList({
                       } as Partial<RouteSearchForm>;
                       setForm(newForm);
                       const newFormComplete = { ...form, ...newForm };
-                      search(newFormComplete, gradesRef);
+                      search();
                     }
                   : undefined
               }

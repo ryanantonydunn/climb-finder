@@ -114,3 +114,13 @@ export interface GradesResponse {
 }
 
 export type RouteSearchFn = (filters: RouteSearchForm, ref: GradesRef) => void;
+
+export interface Store {
+  form: RouteSearchForm;
+  grades: GradesRef | undefined;
+  results: RouteSearchResults | undefined;
+  isSearching: boolean;
+  setForm: (form: Partial<RouteSearchForm>) => void;
+  loadGrades: () => void;
+  search: () => void;
+}

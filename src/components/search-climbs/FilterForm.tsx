@@ -1,21 +1,11 @@
 "use client";
 
-import { GradesRef, RouteSearchFn, RouteSearchFormHook } from "@/store/types";
-import React from "react";
+import { useStore } from "@/store/store";
 
-interface FilterFormProps {
-  search: RouteSearchFn;
-  gradesRef: GradesRef | null;
-  form: RouteSearchFormHook;
-}
+export function FilterForm() {
+  const { grades: gradesRef, form, setForm, search } = useStore();
 
-export function FilterForm({
-  search,
-  gradesRef,
-  form: formObj,
-}: FilterFormProps) {
-  if (!gradesRef || !formObj.form) return "Loading...";
-  const { form, setForm } = formObj;
+  if (!gradesRef) return "Loading...";
 
   return (
     <div className="p-2 pb-6 text-xs">
@@ -146,12 +136,6 @@ export function FilterForm({
                     const newSystemType = gradesRef.systemTypes[newSystemId];
                     const newSystem =
                       gradesRef.types[newSystemType].systems[newSystemId];
-                    console.log(
-                      newSystemId,
-                      newSystemType,
-                      newSystem,
-                      gradesRef
-                    );
                     const newRanges = [...form.gradeRanges];
                     newRanges[i] = {
                       system: Number(e.currentTarget.value),
@@ -364,7 +348,7 @@ export function FilterForm({
       </div>
       <button
         className="w-full p-2 bg-green-800 rounded"
-        onClick={() => search(form, gradesRef)}
+        onClick={() => search()}
       >
         Search
       </button>
