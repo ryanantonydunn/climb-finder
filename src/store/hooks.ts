@@ -144,12 +144,13 @@ function getInitialForm(): RouteSearchForm {
     long: Number(params.get("long") || -2.01056),
     routeNameFilter: params.get("routeNameFilter") || "",
     cragIds: cragIds ? cragIds.split(",").map((id) => Number(id)) : [],
-    distanceMax: Number(params.get("distanceMax") || 0.05),
+    distanceMax: Number(params.get("distanceMax") || 50),
     starsMin: Number(params.get("starsMin") || 0),
     starsMax: Number(params.get("starsMax") || 3),
     heightMin: Number(params.get("heightMin") || 0),
     heightMax: Number(params.get("heightMax") || 10000),
-    heightIncludeZero: !params.get("heightIncludeZero") ? false : true,
+    heightIncludeZero:
+      params.get("heightIncludeZero") === "false" ? false : true,
     sortDirection: (params.get("sortDirection") || "asc") as SortDirection,
     sortKey: (params.get("sortKey") || "id") as RouteSearchSortKey,
   };
@@ -187,11 +188,7 @@ function setQueryStringFromForm(form: RouteSearchForm) {
     if (key === "gradeRanges") {
       url.searchParams.set(key, getUrlVarFromGradeRanges(value));
     } else if (key === "heightIncludeZero") {
-      if (value) {
-        url.searchParams.set(key, "true");
-      } else {
-        url.searchParams.delete(key);
-      }
+      url.searchParams.set(key, value ? "true" : "false");
     } else {
       url.searchParams.set(key, value);
     }

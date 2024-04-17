@@ -24,6 +24,7 @@ export async function POST(req: Request) {
       `;
     } else {
       // search by lat/long
+      const distance = filters.distanceMax / 1000;
       const cosLat2 = Math.cos((filters.lat * Math.PI) / 180) ^ 2;
       const distanceQueryString = `((${filters.lat}-lat)*(${filters.lat}-lat)) + ((${filters.long}-long)*(${filters.long}-long)*${cosLat2})`;
       const cragSort =
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
           : "";
       cragQuery = `
         select * from crags
-          where ${distanceQueryString} < ${filters.distanceMax}${cragSort}
+          where ${distanceQueryString} < ${distance}${cragSort}
           ${cragOrderBy}
           limit 200
       `;
