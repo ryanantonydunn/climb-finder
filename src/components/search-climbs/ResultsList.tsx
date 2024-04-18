@@ -1,8 +1,10 @@
 "use client";
 
+import React from "react";
 import { useStore } from "@/store/store";
 import { RouteSearchForm } from "@/store/types";
 import Link from "next/link";
+import { renderName, renderStars, useRenderGrade } from "../utils";
 
 const headers = [
   { name: "Name", sortKey: "name" },
@@ -15,13 +17,38 @@ const headers = [
 ];
 
 export function ResultsList() {
-  const { results, grades: gradesRef, form, setForm, search } = useStore();
+  const {
+    results,
+    grades: gradesRef,
+    form,
+    setForm,
+    search,
+    activeRoute,
+    setActiveRoute,
+  } = useStore();
+  const renderGrade = useRenderGrade();
+
+  // get element ref for active rows
+  const activeRouteRow = React.useRef<HTMLTableRowElement>(null);
+
+  // scroll into view if active rows change
+  React.useEffect(() => {
+    if (activeRouteRow.current) {
+      activeRouteRow.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [activeRoute]);
+
   if (!gradesRef || !form) {
     return <div className="px-2 py-4">Loading...</div>;
   }
   if (!results || !results.routes.length) {
     return <div className="px-2 py-4">No results to display...</div>;
   }
+
+  const activeRouteObj = results.routes.find((r) => r.id === activeRoute);
 
   return (
     <table className="p-2 text-xs">
@@ -60,7 +87,20 @@ export function ResultsList() {
       </thead>
       <tbody>
         {results.routes.map((route, i) => (
-          <tr key={route.id} className={i % 2 === 0 ? "bg-slate-100" : ""}>
+          <tr
+            key={route.id}
+            className={
+              activeRoute === route.id
+                ? "bg-amber-100"
+                : i % 2 === 0
+                ? "bg-slate-100"
+                : ""
+            }
+            onMouseEnter={() => {
+              setActiveRoute(route.id);
+            }}
+            ref={activeRoute === route.id ? activeRouteRow : null}
+          >
             <td>
               <Link
                 className="block py-1 px-2 underline"
@@ -71,16 +111,10 @@ export function ResultsList() {
               </Link>
             </td>
             <td className="py-1 px-2 whitespace-nowrap">
-              {
-                gradesRef.types[route.gradetype].systems[route.gradesystem]
-                  .grades[route.grade].name
-              }
-              &nbsp;{route.techgrade}
+              {renderGrade(route)}
             </td>
             <td className="whitespace-nowrap tracking-tighter px-2 text-red-600">
-              {route.stars >= 1 && <span>&#9733;</span>}
-              {route.stars >= 2 && <span>&#9733;</span>}
-              {route.stars >= 3 && <span>&#9733;</span>}
+              {renderStars(route)}
             </td>
             <td className="py-1 px-2 whitespace-nowrap">
               {route.height === 0 ? "-" : `${route.height}m`}
@@ -88,17 +122,22 @@ export function ResultsList() {
             <td className="py-1 px-2 whitespace-nowrap">
               {route.height === 0 ? "-" : `${route.pitches}`}
             </td>
-            <td>
+            <td
+              className={`border-l-4   ${
+                activeRouteObj?.crag_id === route.crag_id
+                  ? "border-amber-400"
+                  : "border-transparent"
+              }`}
+            >
               <Link
-                className="block py-1 px-2 underline"
+                className={`block py-1 px-2 underline`}
                 href={`https://www.ukclimbing.com/logbook/crag.php?id=${route.crag_id}`}
                 target="_blank"
-                dangerouslySetInnerHTML={{
-                  __html:
-                    results.crags.find((l) => l.id === route.crag_id)?.name ||
-                    "",
-                }}
-              ></Link>
+              >
+                {renderName(
+                  results.crags.find((l) => l.id === route.crag_id)?.name || ""
+                )}
+              </Link>
             </td>
             <td>-</td>
           </tr>

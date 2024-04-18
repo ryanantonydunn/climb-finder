@@ -124,8 +124,10 @@ export interface Store {
   grades: GradesRef | undefined;
   results: RouteSearchResults | undefined;
   isSearching: boolean;
+  activeRoute: number | undefined;
   setForm: (form: Partial<RouteSearchForm>) => void;
   initForm: () => void;
   loadGrades: () => void;
   search: () => void;
+  setActiveRoute: (n: number | undefined) => void;
 }

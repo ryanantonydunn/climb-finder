@@ -12,6 +12,7 @@ export const useStore = create<Store>((set, get) => ({
   grades: undefined,
   results: undefined,
   isSearching: false,
+  activeRoute: undefined,
   setForm: (newForm: Partial<RouteSearchForm>) => {
     const { form } = get();
     if (!form) return;
@@ -35,5 +36,8 @@ export const useStore = create<Store>((set, get) => ({
     const results = await search(form, grades);
     await setQueryStringFromForm(form);
     set({ results, isSearching: false });
+  },
+  setActiveRoute: (n: number | undefined) => {
+    set(() => ({ activeRoute: n }));
   },
 }));

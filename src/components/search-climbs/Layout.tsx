@@ -5,7 +5,7 @@ import React from "react";
 import { Loading } from "../base/Loading";
 import { Tag } from "../base/Tag";
 import { FilterForm } from "./FilterForm";
-import { Map } from "./Map";
+import { MapDynamic } from "./MapDynamic";
 import { ResultsList } from "./ResultsList";
 import { useStore } from "@/store/store";
 
@@ -47,7 +47,7 @@ export function Layout() {
           )}
           {showMap && (
             <section className="flex-1 h-full overflow-hidden border-r border-slate-300">
-              <Map />
+              <MapDynamic />
             </section>
           )}
           {showFilters && (
