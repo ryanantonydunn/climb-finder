@@ -141,10 +141,12 @@ export async function search(
     body: JSON.stringify({ filters }),
   });
   const json = (await res.json()) as RouteSearchResults;
-  console.log(json);
   return json;
 }
 
+/**
+ * Get the filters necessary to make a route search from the form state
+ */
 function getFiltersFromForm(
   form: RouteSearchForm,
   grades: GradesRef
@@ -159,9 +161,52 @@ function getFiltersFromForm(
 
   // duplicate all relevant fields
   const { locationType, gradeRanges, ...sharedValues } = form;
-  if (locationType !== "crags") {
+  if (locationType === "crags") {
+    sharedValues.lat = undefined;
+    sharedValues.long = undefined;
+  } else {
     sharedValues.cragIds = [];
   }
 
   return { ...sharedValues, grades: allGradeIds };
+}
+
+/**
+ * Set distances of all route results from the form lat/long
+ */
+
+export function setDistances(
+  form: RouteSearchForm,
+  results: RouteSearchResults
+): RouteSearchResults {
+  if (form.lat !== undefined && form.long !== undefined) {
+    return {
+      ...results,
+      distances: results.routes.map((r) => {
+        const crag = results.crags.find((c) => c.id === r.crag_id);
+        if (crag) {
+          return getDistance(
+            form?.lat || 0,
+            form?.long || 0,
+            crag.lat,
+            crag.long
+          );
+        } else {
+          return 0;
+        }
+      }),
+    };
+  }
+  return results;
+}
+
+/**
+ * Get distance between two lat and long points
+ * This is arbitrarily matching the formula used in the SQL query so not fully accurate
+ */
+function getDistance(lat1: number, long1: number, lat2: number, long2: number) {
+  const cosLat2 = Math.cos((lat1 * Math.PI) / 180) ^ 2;
+  const latLongDistance =
+    Math.pow(lat2 - lat1, 2) + Math.pow(long2 - long1, 2) * cosLat2;
+  return Math.round(latLongDistance * 10000) / 10;
 }

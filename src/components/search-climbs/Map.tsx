@@ -12,23 +12,28 @@ import {
   Tooltip,
   useMap,
   useMapEvents,
+  Popup,
+  CircleMarker,
 } from "react-leaflet";
 import { renderName, renderStars, useRenderGrade } from "../utils";
+import { LatLng, LatLngBoundsExpression, LatLngTuple } from "leaflet";
+import { Button } from "../base/Button";
 
 export default function Map() {
   const { form } = useStore();
   if (!form) return;
+  const center: LatLngTuple =
+    form.lat !== undefined && form.long !== undefined
+      ? [form.lat, form.long]
+      : [0, 0];
   return (
-    <MapContainer
-      center={[form.lat, form.long]}
-      zoom={7}
-      style={{ height: "100%" }}
-    >
+    <MapContainer center={center} zoom={7} style={{ height: "100%" }}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <MapItems />
+      <LatLngSearchPopup />
     </MapContainer>
   );
 }
@@ -90,14 +95,15 @@ function MapItems() {
 
   // fly to point when highlighted route changes
   React.useEffect(() => {
-    console.log("1");
     if (!results) return;
     const route = results.routes.find((r) => r.id === activeRoute);
     const crag = results.crags.find((c) => c.id === route?.crag_id);
-    console.log("2", route?.id, crag?.id);
     if (crag) {
-      console.log("3", crag.lat, crag.long);
-      map.flyTo([crag.lat, crag.long]);
+      const cragLocation: LatLngTuple = [crag.lat, crag.long];
+      const isInBounds = map.getBounds().contains(cragLocation);
+      if (!isInBounds) {
+        map.flyTo(cragLocation);
+      }
     }
   }, [activeRoute, map, results]);
 
@@ -167,4 +173,45 @@ function MapItems() {
       </Marker>
     );
   });
+}
+
+function LatLngSearchPopup() {
+  const { form, setForm } = useStore();
+  const [position, setPosition] = React.useState<LatLng | null>(null);
+  const map = useMapEvents({
+    contextmenu(e) {
+      setPosition(e.latlng);
+    },
+  });
+
+  return (
+    <>
+      {form &&
+        ["latlong", "search"].includes(form.locationType) &&
+        form.lat !== undefined &&
+        form.long !== undefined && (
+          <CircleMarker
+            center={[form.lat || 0, form.long]}
+            pathOptions={{ color: "red" }}
+            radius={10}
+          ></CircleMarker>
+        )}
+      {position === null ? null : (
+        <Popup position={position}>
+          <Button
+            onClick={() => {
+              setForm({
+                locationType: "latlong",
+                lat: position.lat,
+                long: position.lng,
+              });
+              setPosition(null);
+            }}
+          >
+            Search from here
+          </Button>
+        </Popup>
+      )}
+    </>
+  );
 }

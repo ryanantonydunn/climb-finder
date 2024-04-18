@@ -13,31 +13,30 @@ export async function POST(req: Request) {
     /**
      * Get crags
      */
-    let cragQuery = "";
-    const cragOrderBy = filters.sortKey === "crag_name" ? "order by name" : "";
-    if (filters.cragIds.length) {
-      cragQuery = `
-        select * from crags
-          where id in (${filters.cragIds.join(",")})
-          ${cragOrderBy}
-          limit 3000
-      `;
-    } else {
+    let cragFilter = "";
+    let cragOrderBy = "";
+    if (filters.sortKey === "crag_name") {
+      cragOrderBy = ` order by name  ${filters.sortDirection}`;
+    }
+    if (filters.lat !== undefined && filters.long !== undefined) {
       // search by lat/long
       const distance = filters.distanceMax / 1000;
       const cosLat2 = Math.cos((filters.lat * Math.PI) / 180) ^ 2;
       const distanceQueryString = `((${filters.lat}-lat)*(${filters.lat}-lat)) + ((${filters.long}-long)*(${filters.long}-long)*${cosLat2})`;
-      const cragSort =
-        filters.sortKey === "distance"
-          ? ` order by ${distanceQueryString} ${filters.sortDirection}`
-          : "";
-      cragQuery = `
-        select * from crags
-          where ${distanceQueryString} < ${distance}${cragSort}
-          ${cragOrderBy}
-          limit 3000
-      `;
+      cragFilter = `where ${distanceQueryString} < ${distance}${cragOrderBy}`;
+      if (filters.sortKey === "distance") {
+        cragOrderBy = ` order by ${distanceQueryString} ${filters.sortDirection}`;
+      }
+    } else if (filters.cragIds?.length) {
+      cragFilter = ` where id in (${filters.cragIds.join(",")})`;
     }
+    const cragQuery = `
+      select * from crags
+        ${cragFilter}
+        ${cragOrderBy}
+        limit 3000
+    `;
+    console.log(cragQuery);
     const cragRows = await db.all<Crag[]>(cragQuery);
     const cragIds = cragRows.map((r) => r.id);
 

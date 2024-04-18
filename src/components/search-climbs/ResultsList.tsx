@@ -13,7 +13,6 @@ const headers = [
   { name: "Height", sortKey: "height" },
   { name: "Pitches", sortKey: "pitches" },
   { name: "Crag", sortKey: "crag_name" },
-  { name: "Distance" },
 ];
 
 export function ResultsList() {
@@ -41,6 +40,14 @@ export function ResultsList() {
     }
   }, [activeRoute]);
 
+  // add distance to headers if set
+  const headersWithDistance = React.useMemo(() => {
+    if (results?.distances) {
+      return [...headers, { name: "Distance", sortKey: "distance" }];
+    }
+    return headers;
+  }, [results?.distances]);
+
   if (!gradesRef || !form) {
     return <div className="px-2 py-4">Loading...</div>;
   }
@@ -49,12 +56,11 @@ export function ResultsList() {
   }
 
   const activeRouteObj = results.routes.find((r) => r.id === activeRoute);
-
   return (
     <table className="p-2 text-xs">
       <thead>
         <tr>
-          {headers.map((header, i) => (
+          {headersWithDistance.map((header, i) => (
             <Th
               key={i}
               onClick={
@@ -139,7 +145,7 @@ export function ResultsList() {
                 )}
               </Link>
             </td>
-            <td>-</td>
+            {!!results.distances && <td>{results.distances[i]}km</td>}
           </tr>
         ))}
       </tbody>

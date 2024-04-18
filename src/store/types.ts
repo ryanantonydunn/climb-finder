@@ -17,8 +17,8 @@ export type RouteSearchSortKey =
 export type SortDirection = "asc" | "desc";
 
 export interface RouteSearchFilters {
-  lat: number;
-  long: number;
+  lat: number | undefined;
+  long: number | undefined;
   distanceMax: number;
   routeNameFilter: string;
   cragIds: number[];
@@ -72,6 +72,7 @@ export interface Route {
 export interface RouteSearchResults {
   routes: Route[];
   crags: Crag[];
+  distances?: number[];
 }
 
 export interface GradeType {

@@ -4,6 +4,7 @@ import {
   getInitialForm,
   loadGrades,
   search,
+  setDistances,
   setQueryStringFromForm,
 } from "./helpers";
 
@@ -33,7 +34,8 @@ export const useStore = create<Store>((set, get) => ({
     const { form, grades, isSearching } = get();
     if (!grades || isSearching || !form) return;
     set({ isSearching: true });
-    const results = await search(form, grades);
+    const resultsRaw = await search(form, grades);
+    const results = setDistances(form, resultsRaw);
     await setQueryStringFromForm(form);
     set({ results, isSearching: false });
   },
