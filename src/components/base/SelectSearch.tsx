@@ -7,10 +7,11 @@ interface SelectSearchProps extends TextInputProps {
   onTextChange: (str: string) => void;
   text: string;
   apiUrl: string;
+  delayLoading?: boolean;
 }
 
 interface SelectSearchItem {
-  label: string;
+  name: string;
   value: unknown;
 }
 
@@ -21,6 +22,7 @@ export function SelectSearch({
   onChange,
   value,
   apiUrl,
+  delayLoading = false,
   ...otherProps
 }: SelectSearchProps) {
   const [items, setItems] = React.useState<SelectSearchItem[] | undefined>();
@@ -52,10 +54,14 @@ export function SelectSearch({
   );
   const queueSearch = React.useCallback(
     (str: string) => {
-      clearTimeout(searchTimeout.current);
-      searchTimeout.current = setTimeout(() => search(str), 1000);
+      if (delayLoading) {
+        clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => search(str), 1000);
+      } else {
+        search(str);
+      }
     },
-    [search]
+    [search, delayLoading]
   );
 
   // Close window when clicking anywhere else
@@ -108,12 +114,11 @@ export function SelectSearch({
                 key={i}
                 className="p-1 border-b last:border-0 border-slate-300 hover:bg-slate-200"
                 onClick={() => {
-                  console.log(item.value);
                   onItemSelect(item.value);
                   setItemListOpen(false);
                 }}
               >
-                {item.label}
+                {item.name}
               </div>
             ))
           ) : (

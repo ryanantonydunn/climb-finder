@@ -1,4 +1,5 @@
 import {
+  Crag,
   GradeRange,
   GradesRef,
   GradesResponse,
@@ -202,12 +203,10 @@ export async function search(
     method: "POST",
     body: JSON.stringify({ filters }),
   });
-  console.log(res.ok);
   if (!res.ok) {
     throw new Error(res.statusText);
   }
   const json = (await res.json()) as RouteSearchResults;
-  console.log(json);
   return json;
 }
 
@@ -236,4 +235,23 @@ function getFiltersFromForm(
   }
 
   return { ...sharedValues, grades: allGradeIds };
+}
+
+/**
+ * Get crags by id
+ */
+export async function getCrags(ids: number[]): Promise<Crag[]> {
+  const res = await fetch(`/api/get-crags/?q=${ids.join(",")}`);
+  if (!res.ok) {
+    throw new Error(res.statusText);
+  }
+  const json = (await res.json()) as Crag[];
+  return json;
+}
+
+/**
+ * Remove duplicates from array
+ */
+export function unique(arr: unknown[]) {
+  return arr.filter((item, i) => arr.indexOf(item) === i);
 }

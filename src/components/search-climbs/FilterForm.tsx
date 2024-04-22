@@ -1,7 +1,7 @@
 "use client";
 
 import { useStore } from "@/store/store";
-import { RouteSearchLocationType, maxNumber } from "@/store/types";
+import { Crag, RouteSearchLocationType, maxNumber } from "@/store/types";
 import React from "react";
 import { Button } from "../base/Button";
 import { Label } from "../base/Label";
@@ -9,6 +9,8 @@ import { Select } from "../base/Select";
 import { Tag } from "../base/Tag";
 import { TextInput } from "../base/TextInput";
 import { SelectSearch } from "../base/SelectSearch";
+import { useCrags } from "@/store/hooks";
+import { unique } from "@/store/helpers";
 
 const locationTypes = [
   ["map", "Map"],
@@ -31,6 +33,8 @@ interface LocalText {
 
 export function FilterForm() {
   const { grades: gradesRef, form, setForm, search } = useStore();
+
+  const crags = useCrags(form?.cragIds || []);
 
   // handle local text input state
   const [localText, setLocalTextRaw] = React.useState<LocalText>({
@@ -87,6 +91,7 @@ export function FilterForm() {
         ))}
         {form.locationType === "map" && (
           <SelectSearch
+            delayLoading
             id="search-location"
             label="Search by location"
             showLabel={false}
@@ -136,19 +141,46 @@ export function FilterForm() {
           </div>
         )}
         {form.locationType === "crags" && (
-          <TextInput
-            id="search-crags"
-            label="Search by crags"
-            showLabel={false}
-            iconLeft={<>&#128269;</>}
-            value={localText.cragSearch}
-            onChange={(e) => {
-              setLocalText({ cragSearch: e.currentTarget.value });
-            }}
-            onBlur={() => {
-              setForm({ cragSearch: localText.cragSearch });
-            }}
-          />
+          <>
+            <SelectSearch
+              id="search-crags"
+              label="Search by crags"
+              showLabel={false}
+              iconLeft={<>&#128269;</>}
+              maxLength={50}
+              apiUrl="/api/search-crags"
+              onItemSelect={(value) => {
+                const crag = value as Crag;
+                const newCrags = unique([...form.cragIds, crag.id]) as number[];
+                setForm({ cragIds: newCrags });
+              }}
+              text={form.cragSearch}
+              onTextChange={(str) => setForm({ cragSearch: str })}
+            />
+            {form.cragIds.map((id, i) => {
+              const crag = crags?.find((c) => c.id === id);
+              return (
+                <div
+                  key={id}
+                  className="bg-slate-200 rounded p-1 mr-1 mb-1 whitespace-nowrap inline-flex"
+                >
+                  {crag?.name}
+                  <Button
+                    className="ml-1"
+                    variant="round"
+                    aria-label="remove"
+                    onClick={() => {
+                      const newIds = [...form.cragIds];
+                      newIds.splice(i, 1);
+                      setForm({ cragIds: newIds });
+                    }}
+                  >
+                    &#x2715;
+                  </Button>
+                </div>
+              );
+            })}
+          </>
         )}
         {["latlong", "map"].includes(form.locationType) && (
           <div className="flex items-center">

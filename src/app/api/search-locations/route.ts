@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     const res = await fetch(url);
     const json = await res.json();
     const items = json.map((item: Result) => ({
-      label: item.display_name,
+      name: item.display_name,
       value: [item.lat, item.lon],
     }));
     return NextResponse.json(items, { status: 200 });

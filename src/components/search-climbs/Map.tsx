@@ -189,7 +189,7 @@ function LatLngSearchPopup() {
   return (
     <>
       {form &&
-        ["latlong", "search"].includes(form.locationType) &&
+        ["latlong", "map"].includes(form.locationType) &&
         form.lat !== undefined &&
         form.long !== undefined && (
           <CircleMarker
