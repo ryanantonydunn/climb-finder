@@ -3,6 +3,7 @@ export interface Crag {
   lat: number;
   long: number;
   name: string;
+  distance?: number;
 }
 
 export type RouteSearchSortKey =
@@ -72,7 +73,6 @@ export interface Route {
 export interface RouteSearchResults {
   routes: Route[];
   crags: Crag[];
-  distances?: number[];
 }
 
 export interface GradeType {

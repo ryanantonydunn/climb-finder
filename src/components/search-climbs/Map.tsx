@@ -136,37 +136,39 @@ function MapItems() {
               </a>
             </h3>
             <table>
-              {crag.routes.map((route, i) => (
-                <tr
-                  key={route.id}
-                  className={
-                    activeRoute === route.id
-                      ? "bg-amber-100"
-                      : i % 2 === 0
-                      ? "bg-slate-100"
-                      : ""
-                  }
-                  onMouseEnter={() => {
-                    setActiveRoute(route.id);
-                  }}
-                >
-                  <td>
-                    <a
-                      className="text-xs underline px-1"
-                      style={{ color: "black" }}
-                      target="_blank"
-                      href={`https://www.ukclimbing.com/logbook/c.php?i=${route.id}`}
-                    >
-                      {route.name}
-                    </a>
-                  </td>
-                  <td className="p-1 font-bold">{renderGrade(route)}</td>
-                  <td className="p-1 text-red-600">{renderStars(route)}</td>
-                  <td className="p-1">
-                    {route.height ? `${route.height}m` : ""}
-                  </td>
-                </tr>
-              ))}
+              <tbody>
+                {crag.routes.map((route, i) => (
+                  <tr
+                    key={route.id}
+                    className={
+                      activeRoute === route.id
+                        ? "bg-amber-100"
+                        : i % 2 === 0
+                        ? "bg-slate-100"
+                        : ""
+                    }
+                    onMouseEnter={() => {
+                      setActiveRoute(route.id);
+                    }}
+                  >
+                    <td>
+                      <a
+                        className="text-xs underline px-1"
+                        style={{ color: "black" }}
+                        target="_blank"
+                        href={`https://www.ukclimbing.com/logbook/c.php?i=${route.id}`}
+                      >
+                        {route.name}
+                      </a>
+                    </td>
+                    <td className="p-1 font-bold">{renderGrade(route)}</td>
+                    <td className="p-1 text-red-600">{renderStars(route)}</td>
+                    <td className="p-1">
+                      {route.height ? `${route.height}m` : ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </Tooltip>
         )}

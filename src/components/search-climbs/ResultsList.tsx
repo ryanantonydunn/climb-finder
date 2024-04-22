@@ -42,11 +42,11 @@ export function ResultsList() {
 
   // add distance to headers if set
   const headersWithDistance = React.useMemo(() => {
-    if (results?.distances) {
+    if (results?.crags[0].distance !== undefined) {
       return [...headers, { name: "Distance", sortKey: "distance" }];
     }
     return headers;
-  }, [results?.distances]);
+  }, [results]);
 
   if (!gradesRef || !form) {
     return <div className="px-2 py-4">Loading...</div>;
@@ -92,62 +92,69 @@ export function ResultsList() {
         </tr>
       </thead>
       <tbody>
-        {results.routes.map((route, i) => (
-          <tr
-            key={route.id}
-            className={
-              activeRoute === route.id
-                ? "bg-amber-100"
-                : i % 2 === 0
-                ? "bg-slate-100"
-                : ""
-            }
-            onMouseEnter={() => {
-              setActiveRoute(route.id);
-            }}
-            ref={activeRoute === route.id ? activeRouteRow : null}
-          >
-            <td>
-              <Link
-                className="block py-1 px-2 underline"
-                target="_blank"
-                href={`https://www.ukclimbing.com/logbook/c.php?i=${route.id}`}
-              >
-                {route.name}
-              </Link>
-            </td>
-            <td className="py-1 px-2 whitespace-nowrap">
-              {renderGrade(route)}
-            </td>
-            <td className="whitespace-nowrap tracking-tighter px-2 text-red-600">
-              {renderStars(route)}
-            </td>
-            <td className="py-1 px-2 whitespace-nowrap">
-              {route.height === 0 ? "-" : `${route.height}m`}
-            </td>
-            <td className="py-1 px-2 whitespace-nowrap">
-              {route.height === 0 ? "-" : `${route.pitches}`}
-            </td>
-            <td
-              className={`border-l-4   ${
-                activeRouteObj?.crag_id === route.crag_id
-                  ? "border-amber-400"
-                  : "border-transparent"
-              }`}
+        {results.routes.map((route, i) => {
+          const crag = results.crags.find((l) => l.id === route.crag_id);
+          return (
+            <tr
+              key={route.id}
+              className={
+                activeRoute === route.id
+                  ? "bg-amber-100"
+                  : i % 2 === 0
+                  ? "bg-slate-100"
+                  : ""
+              }
+              onMouseEnter={() => {
+                setActiveRoute(route.id);
+              }}
+              ref={activeRoute === route.id ? activeRouteRow : null}
             >
-              <Link
-                className={`block py-1 px-2 underline`}
-                href={`https://www.ukclimbing.com/logbook/crag.php?id=${route.crag_id}`}
-                target="_blank"
+              <td>
+                <Link
+                  className="block py-1 px-2 underline"
+                  target="_blank"
+                  href={`https://www.ukclimbing.com/logbook/c.php?i=${route.id}`}
+                >
+                  {route.name}
+                </Link>
+              </td>
+              <td className="py-1 px-2 whitespace-nowrap">
+                {renderGrade(route)}
+              </td>
+              <td className="whitespace-nowrap tracking-tighter px-2 text-red-600">
+                {renderStars(route)}
+              </td>
+              <td className="py-1 px-2 whitespace-nowrap">
+                {route.height === 0 ? "-" : `${route.height}m`}
+              </td>
+              <td className="py-1 px-2 whitespace-nowrap">
+                {route.height === 0 ? "-" : `${route.pitches}`}
+              </td>
+              <td
+                className={`border-l-4   ${
+                  activeRouteObj?.crag_id === route.crag_id
+                    ? "border-amber-400"
+                    : "border-transparent"
+                }`}
               >
-                {renderName(
-                  results.crags.find((l) => l.id === route.crag_id)?.name || ""
-                )}
-              </Link>
-            </td>
-            {!!results.distances && <td>{results.distances[i]}km</td>}
-          </tr>
-        ))}
+                <Link
+                  className={`block py-1 px-2 underline`}
+                  href={`https://www.ukclimbing.com/logbook/crag.php?id=${route.crag_id}`}
+                  target="_blank"
+                >
+                  {renderName(crag?.name || "")}
+                </Link>
+              </td>
+              {!!headersWithDistance.find((h) => h.sortKey === "distance") && (
+                <td>
+                  {crag?.distance
+                    ? `${Math.round(crag.distance * 10000) / 10}km`
+                    : ""}
+                </td>
+              )}
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
