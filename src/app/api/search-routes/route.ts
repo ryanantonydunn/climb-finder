@@ -85,7 +85,6 @@ export async function POST(req: Request) {
         ${cragOrderBy}
         limit 3000
     `;
-    console.log(cragQuery);
     const cragRows = await db.all<Crag[]>(cragQuery);
     const cragIds = cragRows.map((r) => r.id);
 

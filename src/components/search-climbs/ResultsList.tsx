@@ -42,7 +42,7 @@ export function ResultsList() {
 
   // add distance to headers if set
   const headersWithDistance = React.useMemo(() => {
-    if (results?.crags[0].distance !== undefined) {
+    if (results?.crags[0]?.distance !== undefined) {
       return [...headers, { name: "Distance", sortKey: "distance" }];
     }
     return headers;

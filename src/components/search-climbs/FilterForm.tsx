@@ -1,17 +1,14 @@
 "use client";
 
 import { useStore } from "@/store/store";
-import {
-  RouteSearchForm,
-  RouteSearchLocationType,
-  maxNumber,
-} from "@/store/types";
+import { RouteSearchLocationType, maxNumber } from "@/store/types";
 import React from "react";
 import { Button } from "../base/Button";
 import { Label } from "../base/Label";
 import { Select } from "../base/Select";
 import { Tag } from "../base/Tag";
 import { TextInput } from "../base/TextInput";
+import { SelectSearch } from "../base/SelectSearch";
 
 const locationTypes = [
   ["map", "Map"],
@@ -89,19 +86,19 @@ export function FilterForm() {
           </React.Fragment>
         ))}
         {form.locationType === "map" && (
-          <TextInput
+          <SelectSearch
             id="search-location"
             label="Search by location"
             showLabel={false}
             iconLeft={<>&#128269;</>}
-            value={localText.locationSearch}
-            onChange={(e) => {
-              setLocalText({ locationSearch: e.currentTarget.value });
-            }}
-            onBlur={() => {
-              setForm({ locationSearch: localText.locationSearch });
-            }}
             maxLength={50}
+            apiUrl="/api/search-locations"
+            onItemSelect={(value) => {
+              const [lat, long] = value as [string, string];
+              setForm({ lat: Number(lat), long: Number(long) });
+            }}
+            text={form.locationSearch}
+            onTextChange={(str) => setForm({ locationSearch: str })}
           />
         )}
         {form.locationType === "latlong" && (

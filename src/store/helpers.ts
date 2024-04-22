@@ -202,10 +202,12 @@ export async function search(
     method: "POST",
     body: JSON.stringify({ filters }),
   });
+  console.log(res.ok);
   if (!res.ok) {
     throw new Error(res.statusText);
   }
   const json = (await res.json()) as RouteSearchResults;
+  console.log(json);
   return json;
 }
 

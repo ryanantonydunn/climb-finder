@@ -1,7 +1,8 @@
 import React from "react";
 import { Label } from "./Label";
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectProps
+  extends React.SelectHTMLAttributes<HTMLSelectElement> {
   id: string;
   label: string;
   containerClassName?: string;
