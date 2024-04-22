@@ -54,6 +54,8 @@ export type GradeRange = {
 export interface RouteSearchForm extends Omit<RouteSearchFilters, "grades"> {
   locationType: RouteSearchLocationType;
   gradeRanges: GradeRange[];
+  locationSearch: string;
+  cragSearch: string;
 }
 
 export interface RouteSearchFormHook {

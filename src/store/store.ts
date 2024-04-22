@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { RouteSearchForm, Store } from "./types";
 import {
   getInitialForm,
+  getQueryVarForm,
   loadGrades,
   search,
   setQueryStringFromForm,
@@ -19,7 +20,10 @@ export const useStore = create<Store>((set, get) => ({
     set(() => ({ form: { ...form, ...newForm } }));
   },
   initForm: () => {
-    set(() => ({ form: getInitialForm() }));
+    const { search } = get();
+    const queryVarForm = getQueryVarForm();
+    const initialForm = getInitialForm(queryVarForm);
+    set(() => ({ form: initialForm }));
   },
   loadGrades: async () => {
     try {

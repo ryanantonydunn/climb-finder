@@ -11,33 +11,91 @@ import {
 } from "./types";
 
 /**
+ * Get the query var values for the form
+ */
+export function getQueryVarForm(): Partial<RouteSearchForm> {
+  const params = new URLSearchParams(window.location.search);
+
+  function getNum(key: string): number | undefined {
+    if (!params.get(key)) return undefined;
+    return Number(params.get(key));
+  }
+
+  function getBoolean(key: string): boolean | undefined {
+    if (!params.get(key)) return undefined;
+    return params.get(key) === "true";
+  }
+
+  function getString(key: string): string | undefined {
+    if (!params.get(key)) return undefined;
+    return String(params.get(key));
+  }
+
+  const cragIdsStr = params.get("cragIds");
+  const cragIds = cragIdsStr
+    ? cragIdsStr.split(",").map((id) => Number(id))
+    : undefined;
+
+  const gradeRanges = params.get("gradeRanges")
+    ? getGradeRangesFromUrlVar(params.get("gradeRanges") || "")
+    : undefined;
+
+  const obj = {
+    locationType: getString("locationType") as
+      | RouteSearchLocationType
+      | undefined,
+    locationSearch: getString("locationSearch"),
+    cragSearch: getString("cragSearch"),
+    gradeRanges,
+    lat: getNum("lat"),
+    long: getNum("long"),
+    routeNameFilter: params.get("routeNameFilter") || "",
+    cragIds,
+    distanceMax: getNum("distanceMax"),
+    starsMin: getNum("starsMin"),
+    starsMax: getNum("starsMax"),
+    heightMin: getNum("heightMin"),
+    heightMax: getNum("heightMax"),
+    heightIncludeZero: getBoolean("heightIncludeZero"),
+    pitchesMin: getNum("pitchesMin"),
+    pitchesMax: getNum("pitchesMax"),
+    pitchesIncludeZero: getBoolean("pitchesIncludeZero"),
+    sortDirection: getString("sortDirection") as SortDirection | undefined,
+    sortKey: getString("sortKey") as RouteSearchSortKey | undefined,
+  };
+  return Object.fromEntries(
+    Object.entries(obj).filter((o) => o[1] !== undefined)
+  );
+}
+
+/**
  * Get the initial form values with defaults or from the query string
  */
-export function getInitialForm(): RouteSearchForm {
-  const params = new URLSearchParams(window.location.search);
-  const cragIds = params.get("cragIds");
-  return {
-    locationType: (params.get("locationType") ||
-      "map") as RouteSearchLocationType,
-    gradeRanges: getGradeRangesFromUrlVar(params.get("gradeRanges") || "2,1,6"),
-    lat: Number(params.get("lat") || 53.74312),
-    long: Number(params.get("long") || -2.01056),
-    routeNameFilter: params.get("routeNameFilter") || "",
-    cragIds: cragIds ? cragIds.split(",").map((id) => Number(id)) : [],
-    distanceMax: Number(params.get("distanceMax") || 50),
-    starsMin: Number(params.get("starsMin") || 0),
-    starsMax: Number(params.get("starsMax") || 3),
-    heightMin: Number(params.get("heightMin") || 0),
-    heightMax: Number(params.get("heightMax") || 10000),
-    heightIncludeZero:
-      params.get("heightIncludeZero") === "false" ? false : true,
-    pitchesMin: Number(params.get("pitchesMin") || 0),
-    pitchesMax: Number(params.get("pitchesMax") || 100),
-    pitchesIncludeZero:
-      params.get("pitchesIncludeZero") === "false" ? false : true,
-    sortDirection: (params.get("sortDirection") || "asc") as SortDirection,
-    sortKey: (params.get("sortKey") || "id") as RouteSearchSortKey,
+export function getInitialForm(
+  partial: Partial<RouteSearchForm>
+): RouteSearchForm {
+  const defaults: RouteSearchForm = {
+    locationType: "map",
+    locationSearch: "",
+    cragSearch: "",
+    gradeRanges: getGradeRangesFromUrlVar("2,1,6"),
+    lat: 53.74312,
+    long: -2.01056,
+    routeNameFilter: "",
+    cragIds: [],
+    distanceMax: 50,
+    starsMin: 0,
+    starsMax: 3,
+    heightMin: 0,
+    heightMax: 10000,
+    heightIncludeZero: true,
+    pitchesMin: 0,
+    pitchesMax: 100,
+    pitchesIncludeZero: true,
+    sortDirection: "asc",
+    sortKey: "id",
   };
+  return Object.assign(defaults, partial);
 }
 
 /**

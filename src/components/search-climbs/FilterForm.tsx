@@ -1,7 +1,11 @@
 "use client";
 
 import { useStore } from "@/store/store";
-import { RouteSearchLocationType, maxNumber } from "@/store/types";
+import {
+  RouteSearchForm,
+  RouteSearchLocationType,
+  maxNumber,
+} from "@/store/types";
 import React from "react";
 import { Button } from "../base/Button";
 import { Label } from "../base/Label";
@@ -15,8 +19,54 @@ const locationTypes = [
   ["crags", "Crags"],
 ];
 
+interface LocalText {
+  locationSearch: string;
+  cragSearch: string;
+  lat: string;
+  long: string;
+  distanceMax: string;
+  heightMin: string;
+  heightMax: string;
+  pitchesMin: string;
+  pitchesMax: string;
+  routeNameFilter: string;
+}
+
 export function FilterForm() {
   const { grades: gradesRef, form, setForm, search } = useStore();
+
+  // handle local text input state
+  const [localText, setLocalTextRaw] = React.useState<LocalText>({
+    locationSearch: "",
+    cragSearch: "",
+    lat: "0",
+    long: "0",
+    distanceMax: "0",
+    heightMin: "0",
+    heightMax: "0",
+    pitchesMin: "0",
+    pitchesMax: "0",
+    routeNameFilter: "",
+  });
+  const setLocalText = React.useCallback((values: Partial<LocalText>) => {
+    setLocalTextRaw((v) => ({ ...v, ...values }));
+  }, []);
+  React.useEffect(() => {
+    if (!form) return;
+    setLocalTextRaw({
+      locationSearch: form.locationSearch,
+      cragSearch: form.cragSearch,
+      lat: String(form.lat),
+      long: String(form.long),
+      distanceMax: String(form.distanceMax),
+      heightMin: String(form.heightMin),
+      heightMax: String(form.heightMax),
+      pitchesMin: String(form.pitchesMin),
+      pitchesMax: String(form.pitchesMax),
+      routeNameFilter: form.routeNameFilter,
+    });
+  }, [form]);
+
   if (!gradesRef || !form) {
     return <div className="px-2 py-4">Loading...</div>;
   }
@@ -44,9 +94,12 @@ export function FilterForm() {
             label="Search by location"
             showLabel={false}
             iconLeft={<>&#128269;</>}
-            value={"howdy"}
+            value={localText.locationSearch}
             onChange={(e) => {
-              console.log("TODO");
+              setLocalText({ locationSearch: e.currentTarget.value });
+            }}
+            onBlur={() => {
+              setForm({ locationSearch: localText.locationSearch });
             }}
             maxLength={50}
           />
@@ -58,11 +111,12 @@ export function FilterForm() {
                 id="lat"
                 label="Latitude"
                 showLabel={false}
-                value={form.lat}
+                value={localText.lat}
                 onChange={(e) => {
-                  setForm({
-                    lat: Number(e.currentTarget.value),
-                  });
+                  setLocalText({ lat: e.currentTarget.value });
+                }}
+                onBlur={() => {
+                  setForm({ lat: Number(localText.lat) });
                 }}
                 maxLength={50}
               />
@@ -72,11 +126,12 @@ export function FilterForm() {
                 id="long"
                 label="Longitude"
                 showLabel={false}
-                value={form.long}
+                value={localText.long}
                 onChange={(e) => {
-                  setForm({
-                    long: Number(e.currentTarget.value),
-                  });
+                  setLocalText({ long: e.currentTarget.value });
+                }}
+                onBlur={() => {
+                  setForm({ long: Number(localText.long) });
                 }}
                 maxLength={50}
               />
@@ -89,9 +144,12 @@ export function FilterForm() {
             label="Search by crags"
             showLabel={false}
             iconLeft={<>&#128269;</>}
-            value={"crags"}
+            value={localText.cragSearch}
             onChange={(e) => {
-              console.log("TODO");
+              setLocalText({ cragSearch: e.currentTarget.value });
+            }}
+            onBlur={() => {
+              setForm({ cragSearch: localText.cragSearch });
             }}
           />
         )}
@@ -105,11 +163,14 @@ export function FilterForm() {
               id="distance"
               label="Maximum distance"
               showLabel={false}
-              value={form.distanceMax}
+              value={localText.distanceMax}
               onChange={(e) => {
+                setLocalText({ distanceMax: e.currentTarget.value });
+              }}
+              onBlur={() => {
                 setForm({
                   distanceMax: Math.min(
-                    Number(e.currentTarget.value),
+                    Number(localText.distanceMax),
                     maxNumber
                   ),
                 });
@@ -244,12 +305,15 @@ export function FilterForm() {
           <TextInput
             containerClassName="flex-grow"
             id="min-height"
-            label="Min height"
+            label="Min height (m)"
             type="number"
-            value={form.heightMin}
+            value={localText.heightMin}
             onChange={(e) => {
+              setLocalText({ heightMin: e.currentTarget.value });
+            }}
+            onBlur={() => {
               const newNum = Math.min(
-                Number(e.currentTarget.value),
+                Number(localText.heightMin),
                 form.heightMax
               );
               setForm({
@@ -261,12 +325,15 @@ export function FilterForm() {
           <TextInput
             containerClassName="flex-grow"
             id="max-height"
-            label="Max height"
+            label="Max height (m)"
             type="number"
-            value={form.heightMax}
+            value={localText.heightMax}
             onChange={(e) => {
+              setLocalText({ heightMax: e.currentTarget.value });
+            }}
+            onBlur={() => {
               const newNum = Math.max(
-                Number(e.currentTarget.value),
+                Number(localText.heightMax),
                 form.heightMin
               );
               setForm({
@@ -294,10 +361,13 @@ export function FilterForm() {
             id="min-pitches"
             label="Min pitches"
             type="number"
-            value={form.pitchesMin}
+            value={localText.pitchesMin}
             onChange={(e) => {
+              setLocalText({ pitchesMin: e.currentTarget.value });
+            }}
+            onBlur={() => {
               const newNum = Math.min(
-                Number(e.currentTarget.value),
+                Number(localText.pitchesMin),
                 form.pitchesMax
               );
               setForm({
@@ -311,10 +381,13 @@ export function FilterForm() {
             id="max-pitches"
             label="Max pitches"
             type="number"
-            value={form.pitchesMax}
+            value={localText.pitchesMax}
             onChange={(e) => {
+              setLocalText({ pitchesMax: e.currentTarget.value });
+            }}
+            onBlur={() => {
               const newNum = Math.max(
-                Number(e.currentTarget.value),
+                Number(localText.pitchesMax),
                 form.pitchesMin
               );
               setForm({
@@ -374,10 +447,13 @@ export function FilterForm() {
           containerClassName="flex-grow"
           id="route-name-filter"
           label="Route name filter"
-          value={form.routeNameFilter}
+          value={localText.routeNameFilter}
           onChange={(e) => {
+            setLocalText({ routeNameFilter: e.currentTarget.value });
+          }}
+          onBlur={() => {
             setForm({
-              routeNameFilter: e.currentTarget.value,
+              routeNameFilter: localText.routeNameFilter,
             });
           }}
           maxLength={50}
