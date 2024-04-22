@@ -1,7 +1,7 @@
 "use client";
 
 import { useStore } from "@/store/store";
-import { RouteSearchLocationType } from "@/store/types";
+import { RouteSearchLocationType, maxNumber } from "@/store/types";
 import React from "react";
 import { Button } from "../base/Button";
 import { Label } from "../base/Label";
@@ -48,6 +48,7 @@ export function FilterForm() {
             onChange={(e) => {
               console.log("TODO");
             }}
+            maxLength={50}
           />
         )}
         {form.locationType === "latlong" && (
@@ -63,6 +64,7 @@ export function FilterForm() {
                     lat: Number(e.currentTarget.value),
                   });
                 }}
+                maxLength={50}
               />
             </div>
             <div className="flex-grow">
@@ -76,6 +78,7 @@ export function FilterForm() {
                     long: Number(e.currentTarget.value),
                   });
                 }}
+                maxLength={50}
               />
             </div>
           </div>
@@ -105,9 +108,13 @@ export function FilterForm() {
               value={form.distanceMax}
               onChange={(e) => {
                 setForm({
-                  distanceMax: Number(e.currentTarget.value),
+                  distanceMax: Math.min(
+                    Number(e.currentTarget.value),
+                    maxNumber
+                  ),
                 });
               }}
+              maxLength={50}
             />
             <div>km</div>
           </div>
@@ -246,9 +253,10 @@ export function FilterForm() {
                 form.heightMax
               );
               setForm({
-                heightMin: newNum,
+                heightMin: Math.min(newNum, maxNumber),
               });
             }}
+            maxLength={50}
           />
           <TextInput
             containerClassName="flex-grow"
@@ -262,9 +270,10 @@ export function FilterForm() {
                 form.heightMin
               );
               setForm({
-                heightMax: newNum,
+                heightMax: Math.min(newNum, maxNumber),
               });
             }}
+            maxLength={50}
           />
         </div>
         <Tag
@@ -292,9 +301,10 @@ export function FilterForm() {
                 form.pitchesMax
               );
               setForm({
-                pitchesMin: newNum,
+                pitchesMin: Math.min(newNum, maxNumber),
               });
             }}
+            maxLength={50}
           />
           <TextInput
             containerClassName="flex-grow"
@@ -308,9 +318,10 @@ export function FilterForm() {
                 form.pitchesMin
               );
               setForm({
-                pitchesMax: newNum,
+                pitchesMax: Math.min(newNum, maxNumber),
               });
             }}
+            maxLength={50}
           />
         </div>
         <Tag
@@ -369,6 +380,7 @@ export function FilterForm() {
               routeNameFilter: e.currentTarget.value,
             });
           }}
+          maxLength={50}
         />
       </div>
       <div className="p-2 pb-6">

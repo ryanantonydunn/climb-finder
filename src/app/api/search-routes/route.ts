@@ -1,4 +1,10 @@
-import { Crag, Route, RouteSearchFilters } from "@/store/types";
+import {
+  Crag,
+  Route,
+  RouteSearchFilters,
+  maxNumber,
+  routeSearchSortKeys,
+} from "@/store/types";
 import { NextResponse } from "next/server";
 import { dbLoad } from "../helpers";
 
@@ -11,27 +17,70 @@ export async function POST(req: Request) {
     const filters = data.filters as RouteSearchFilters;
 
     /**
+     * Sanitise inputs
+     */
+    const floats = [
+      filters.distanceMax,
+      filters.heightMin,
+      filters.heightMax,
+      filters.lat,
+      filters.long,
+    ];
+    floats.forEach((n) => {
+      if (n === undefined) return;
+      if (!isNumber(n)) throw new Error("Non-numeric input detected");
+      if (isTooBig(n)) throw new Error("Too-large number detected");
+    });
+    const integers = [
+      filters.pitchesMax,
+      filters.pitchesMin,
+      filters.starsMin,
+      filters.starsMax,
+      ...filters.cragIds,
+      ...filters.grades,
+    ];
+    integers.forEach((n) => {
+      if (n === undefined) return;
+      if (!Number.isInteger(n)) throw new Error("Non integer input detected");
+      if (isTooBig(n)) throw new Error("Too-large number detected");
+    });
+    [filters.heightIncludeZero, filters.pitchesIncludeZero].forEach((b) => {
+      if (typeof b !== "boolean") throw new Error("Non boolean input detected");
+    });
+    filters.routeNameFilter = String(filters.routeNameFilter)
+      .replace(/[^\w\s]/gi, "")
+      .slice(0, 50);
+    if (!["asc", "desc"].includes(filters.sortDirection)) {
+      throw new Error("Invalid sort direction");
+    }
+    if (!routeSearchSortKeys.includes(filters.sortKey)) {
+      throw new Error("Invalid sort key");
+    }
+
+    /**
      * Get crags
      */
     let cragFilter = "";
     let cragOrderBy = "";
+    let cragSelect = "*";
     if (filters.sortKey === "crag_name") {
-      cragOrderBy = ` order by name  ${filters.sortDirection}`;
+      cragOrderBy = `order by name ${filters.sortDirection}`;
     }
     if (filters.lat !== undefined && filters.long !== undefined) {
       // search by lat/long
       const distance = filters.distanceMax / 1000;
       const cosLat2 = Math.cos((filters.lat * Math.PI) / 180) ^ 2;
       const distanceQueryString = `((${filters.lat}-lat)*(${filters.lat}-lat)) + ((${filters.long}-long)*(${filters.long}-long)*${cosLat2})`;
-      cragFilter = `where ${distanceQueryString} < ${distance}${cragOrderBy}`;
+      cragSelect = `*, (${distanceQueryString}) as distance`;
+      cragFilter = `where distance < ${distance}`;
       if (filters.sortKey === "distance") {
-        cragOrderBy = ` order by ${distanceQueryString} ${filters.sortDirection}`;
+        cragOrderBy = `order by distance ${filters.sortDirection}`;
       }
     } else if (filters.cragIds?.length) {
       cragFilter = ` where id in (${filters.cragIds.join(",")})`;
     }
     const cragQuery = `
-      select * from crags
+      select ${cragSelect} from crags
         ${cragFilter}
         ${cragOrderBy}
         limit 3000
@@ -122,4 +171,14 @@ function getCragOrderQueryString(ids: number[]) {
   });
   str += " end";
   return str;
+}
+
+/**
+ * Check inputs
+ */
+function isNumber(n: unknown) {
+  return typeof n === "number" && isFinite(n);
+}
+function isTooBig(n: number) {
+  return n > maxNumber;
 }

@@ -27,15 +27,22 @@ export const useStore = create<Store>((set, get) => ({
       set({ grades });
     } catch (e) {
       console.error(e);
+      alert("Error loading grades, check logs");
     }
   },
   search: async () => {
     const { form, grades, isSearching } = get();
     if (!grades || isSearching || !form) return;
-    set({ isSearching: true });
-    const results = await search(form, grades);
-    await setQueryStringFromForm(form);
-    set({ results, isSearching: false });
+    try {
+      set({ isSearching: true });
+      const results = await search(form, grades);
+      await setQueryStringFromForm(form);
+      set({ results, isSearching: false });
+    } catch (e) {
+      console.error(e);
+      alert("Error loading search results, check logs");
+      set({ isSearching: false });
+    }
   },
   setActiveRoute: (n: number | undefined) => {
     set(() => ({ activeRoute: n }));

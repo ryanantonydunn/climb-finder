@@ -86,6 +86,10 @@ function getUrlVarFromGradeRanges(ranges: GradeRange[]): string {
  */
 export async function loadGrades(): Promise<GradesRef> {
   const res = await fetch("/api/grades");
+  if (!res.ok) {
+    throw new Error(res.statusText);
+  }
+
   const json = (await res.json()) as GradesResponse;
 
   // Reference object for all grades
@@ -140,6 +144,9 @@ export async function search(
     method: "POST",
     body: JSON.stringify({ filters }),
   });
+  if (!res.ok) {
+    throw new Error(res.statusText);
+  }
   const json = (await res.json()) as RouteSearchResults;
   return json;
 }

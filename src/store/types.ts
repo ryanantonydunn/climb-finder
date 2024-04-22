@@ -1,3 +1,5 @@
+export const maxNumber = 99999999;
+
 export interface Crag {
   id: number;
   lat: number;
@@ -6,14 +8,17 @@ export interface Crag {
   distance?: number;
 }
 
-export type RouteSearchSortKey =
-  | "id"
-  | "distance"
-  | "stars"
-  | "gradescore"
-  | "height"
-  | "name"
-  | "crag_name";
+export const routeSearchSortKeys = [
+  "id",
+  "distance",
+  "stars",
+  "gradescore",
+  "height",
+  "name",
+  "crag_name",
+] as const;
+
+export type RouteSearchSortKey = (typeof routeSearchSortKeys)[number];
 
 export type SortDirection = "asc" | "desc";
 
