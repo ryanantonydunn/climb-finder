@@ -47,7 +47,7 @@ export function Layout() {
           )}
           {showMap && (
             <section className="flex-1 h-full overflow-hidden border-r border-slate-300">
-              <MapDynamic />
+              <MapDynamic layout={[showList, showMap, showFilters]} />
             </section>
           )}
           {showFilters && (

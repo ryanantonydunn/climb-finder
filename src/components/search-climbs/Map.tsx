@@ -19,7 +19,11 @@ import {
 import { Button } from "../base/Button";
 import { renderName, renderStars, useRenderGrade } from "../utils";
 
-export default function Map() {
+interface MapProps {
+  layout: [boolean, boolean, boolean];
+}
+
+export default function Map({ layout }: MapProps) {
   const { form } = useStore();
   if (!form) return;
   const center: LatLngTuple =
@@ -32,16 +36,21 @@ export default function Map() {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <MapItems />
+      <MapItems layout={layout} />
       <LatLngSearchPopup />
     </MapContainer>
   );
 }
 
-function MapItems() {
+function MapItems({ layout }: MapProps) {
   const map = useMap();
   const renderGrade = useRenderGrade();
   const { results, activeRoute, setActiveRoute } = useStore();
+
+  // resize when layout changes
+  React.useEffect(() => {
+    map.invalidateSize();
+  }, [layout, map]);
 
   // build reference object for routes
   const sortedResults = React.useMemo(() => {
