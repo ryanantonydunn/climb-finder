@@ -115,7 +115,7 @@ export function ResultsList() {
                   target="_blank"
                   href={`https://www.ukclimbing.com/logbook/c.php?i=${route.id}`}
                 >
-                  {route.name}
+                  {renderName(route.name)}
                 </Link>
               </td>
               <td className="py-1 px-2 whitespace-nowrap">

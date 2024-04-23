@@ -133,4 +133,16 @@ async function renameTable() {
   await dbRun(db, query);
 }
 
-renameTable();
+async function newCrags() {
+  const db = await dbLoadPublic();
+  // const query = `
+  //   select * from crags where name like "%Barm%"
+  //   `;
+
+  const query =
+    "select id,name,crag_id from routes where name like '%Slabotomy%'";
+  const rows = await dbRows(db, query);
+  console.log(rows);
+}
+
+newCrags();

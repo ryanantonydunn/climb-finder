@@ -1,23 +1,23 @@
 "use client";
 
 import { useStore } from "@/store/store";
+import { LatLng, LatLngTuple } from "leaflet";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet/dist/leaflet.css";
 import React from "react";
 import {
-  Marker,
+  CircleMarker,
   MapContainer,
+  Marker,
+  Popup,
   TileLayer,
   Tooltip,
   useMap,
   useMapEvents,
-  Popup,
-  CircleMarker,
 } from "react-leaflet";
-import { renderName, renderStars, useRenderGrade } from "../utils";
-import { LatLng, LatLngBoundsExpression, LatLngTuple } from "leaflet";
 import { Button } from "../base/Button";
+import { renderName, renderStars, useRenderGrade } from "../utils";
 
 export default function Map() {
   const { form } = useStore();
@@ -63,9 +63,8 @@ function MapItems() {
     viewreset(e) {
       setZoom(e.target._zoom);
     },
-
-    // remove last hovered item if clicked
     click(e) {
+      // remove last hovered item if clicked
       const targetElement = e.originalEvent.target as Element;
       // only remove if we are not clicking inside a tooltip
       if (
@@ -79,7 +78,6 @@ function MapItems() {
       }
     },
   });
-  const areTooltipsPermanenet = zoom >= 13;
 
   // zoom map to show new pins
   React.useEffect(() => {
@@ -112,7 +110,7 @@ function MapItems() {
   const activeRouteObj = results?.routes.find((r) => r.id === activeRoute);
 
   return sortedResults.map((crag) => {
-    const isOpen = areTooltipsPermanenet || activeRouteObj?.crag_id === crag.id;
+    const isOpen = activeRouteObj?.crag_id === crag.id;
     return (
       <Marker
         key={crag.id}
@@ -158,7 +156,7 @@ function MapItems() {
                         target="_blank"
                         href={`https://www.ukclimbing.com/logbook/c.php?i=${route.id}`}
                       >
-                        {route.name}
+                        {renderName(route.name)}
                       </a>
                     </td>
                     <td className="p-1 font-bold">{renderGrade(route)}</td>

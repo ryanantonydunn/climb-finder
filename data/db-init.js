@@ -4,6 +4,7 @@ const {
   dbInsertArray,
   dbRun,
   dbLoadPublic,
+  dbRows,
 } = require("./db-utils");
 const fs = require("fs");
 const path = require("path");
@@ -89,18 +90,16 @@ async function createTableGrades(db) {
   await dbRun(db, query);
 }
 
-async function initCrags(db) {
+async function initCrags(db, overwrite = false) {
   // load all crags and remove duplicates
-  const crags = [];
-  for (let i = 0; i < 9; i++) {
-    const jsonPath = path.join(
-      __dirname,
-      "../../peak-ticker/data/scraped-crag-positions",
-      `${i}.json`
-    );
+  let crags = [];
+  let total = 0;
+  for (let i = 0; i < 11; i++) {
+    const jsonPath = path.join(__dirname, "crag-positions", `${i}.json`);
     const file = fs.readFileSync(jsonPath);
     const json = JSON.parse(file);
     console.log(`preparing file: ${i} - count: ${json.length}`);
+    total += json.length;
     for (let j = 0; j < json.length; j++) {
       const row = [json[j][0], json[j][2], json[j][1], ""];
       if (crags.find((c) => c[0] === row[0])) {
@@ -110,6 +109,18 @@ async function initCrags(db) {
     }
   }
 
+  console.log(`total rows: ${total}`);
+  console.log(`total without duplicates: ${crags.length}`);
+
+  // if not overwriting remove items that already exist
+  if (!overwrite) {
+    const ids = crags.map((c) => c[0]).join(",");
+    const cragQuery = `select id from crags where id in (${ids})`;
+    const rows = await dbRows(db, cragQuery);
+    console.log(`already set: ${rows.length}`);
+    crags = crags.filter((c) => !rows.find((r) => r.id === Number(c[0])));
+  }
+
   // initialise crag positions from json file to crag-positions db
   console.log(`writing rows: ${crags.length}`);
   await dbInsertArray(db, "crags", crags);
@@ -117,10 +128,10 @@ async function initCrags(db) {
 
 async function dbInitMain() {
   // check if database already exists
-  if (fs.existsSync(dbPathFull)) {
-    console.error("Database already exists");
-    return;
-  }
+  // if (fs.existsSync(dbPathFull)) {
+  //   console.error("Database already exists");
+  //   return;
+  // }
 
   // create database
   const db = await dbLoadPublic();
@@ -128,10 +139,8 @@ async function dbInitMain() {
   // await createTableCrags(db);
   // await createTableRoutes(db);
   // await createTableGradeTypes(db);
-  await dbRun(db, `drop table grade_systems`);
-  await createTableGradeSystems(db);
+  // await createTableGradeSystems(db);
   // await createTableGrades(db);
-
   // await initCrags(db);
 }
 
