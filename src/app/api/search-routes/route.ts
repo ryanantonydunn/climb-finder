@@ -68,9 +68,10 @@ export async function POST(req: Request) {
     }
     if (filters.lat !== undefined && filters.long !== undefined) {
       // search by lat/long
-      const distance = filters.distanceMax / 1000;
-      const cosLat2 = Math.cos((filters.lat * Math.PI) / 180) ^ 2;
-      const distanceQueryString = `((${filters.lat}-lat)*(${filters.lat}-lat)) + ((${filters.long}-long)*(${filters.long}-long)*${cosLat2})`;
+      const distance = filters.distanceMax / 10000;
+
+      const sf = Math.PI / 180; // scaling factor
+      const distanceQueryString = `acos(sin(lat*${sf})*sin(${filters.lat}*${sf}) + cos(lat*${sf})*cos(${filters.lat}*${sf})*cos((long-(${filters.long}))*${sf}))`;
       cragSelect = `*, (${distanceQueryString}) as distance`;
       cragFilter = `where distance < ${distance}`;
       if (filters.sortKey === "distance") {
@@ -155,6 +156,7 @@ export async function POST(req: Request) {
     };
     return NextResponse.json(result, { status: 200 });
   } catch (err: any) {
+    console.error(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

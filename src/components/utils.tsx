@@ -8,9 +8,13 @@ export function useRenderGrade() {
     (route: Route) => {
       if (!grades) return "";
       const gradeType = grades.types[route.gradetype];
-      const gradeSystem = gradeType.systems[route.gradesystem];
-      const grade = gradeSystem.grades[route.grade];
-      return `${grade.name} ${route.techgrade || ""}`;
+      const gradeSystem = gradeType?.systems[route.gradesystem];
+      const grade = gradeSystem?.grades[route.grade];
+      if (grade) {
+        return `${grade.name} ${route.techgrade || ""}`;
+      } else {
+        return "Unknown";
+      }
     },
     [grades]
   );
