@@ -40,9 +40,16 @@ export default function Map() {
 }
 
 function MapItems() {
+  const hasMounted = React.useRef(false);
   const map = useMap();
   const renderGrade = useRenderGrade();
-  const { results, activeRoute, setActiveRoute, screenLayout } = useStore();
+  const {
+    results,
+    activeRoute,
+    setActiveRoute,
+    screenLayout,
+    setScreenLayout,
+  } = useStore();
 
   // resize when layout changes
   React.useEffect(() => {
@@ -94,7 +101,10 @@ function MapItems() {
 
   // reset active crag and route if results change
   React.useEffect(() => {
-    setActiveRoute(undefined);
+    if (hasMounted.current) {
+      setActiveRoute(undefined);
+    }
+    hasMounted.current = true;
   }, [sortedResults, setActiveRoute]);
 
   // fly to point when highlighted route changes
@@ -123,6 +133,9 @@ function MapItems() {
         position={[crag.lat, crag.long]}
         eventHandlers={{
           mouseover: (e) => {
+            setActiveRoute(crag.routes[0].id);
+          },
+          click: (e) => {
             setActiveRoute(crag.routes[0].id);
           },
         }}
@@ -170,6 +183,20 @@ function MapItems() {
                     <td className="p-1">
                       {route.height ? `${route.height}m` : ""}
                     </td>
+                    {!isDesktop() && (
+                      <td className="p-1">
+                        <Button
+                          variant="utility"
+                          title="View in list"
+                          onClick={() => {
+                            setActiveRoute(route.id);
+                            setScreenLayout([true, false, false]);
+                          }}
+                        >
+                          &larr;
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

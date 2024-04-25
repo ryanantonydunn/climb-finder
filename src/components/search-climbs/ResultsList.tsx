@@ -5,13 +5,15 @@ import { useStore } from "@/store/store";
 import { RouteSearchForm } from "@/store/types";
 import Link from "next/link";
 import { renderName, renderStars, useRenderGrade } from "../utils";
+import { isDesktop } from "@/store/helpers";
+import { Button } from "../base/Button";
 
 const headers = [
   { name: "Name", sortKey: "name" },
   { name: "Grade", sortKey: "gradescore" },
   { name: "Stars", sortKey: "stars" },
-  { name: "Ht", sortKey: "height" },
-  { name: "Pt", sortKey: "pitches" },
+  { name: "Height", sortKey: "height" },
+  { name: "Pitches", sortKey: "pitches" },
   { name: "Crag", sortKey: "crag_name" },
 ];
 
@@ -24,6 +26,7 @@ export function ResultsList() {
     search,
     activeRoute,
     setActiveRoute,
+    setScreenLayout,
   } = useStore();
   const renderGrade = useRenderGrade();
 
@@ -90,6 +93,7 @@ export function ResultsList() {
               </span>
             </Th>
           ))}
+          {!isDesktop() && <Th>Map</Th>}
         </tr>
       </thead>
       <tbody>
@@ -151,6 +155,21 @@ export function ResultsList() {
                   {crag?.distance
                     ? `${Math.round(crag.distance * 10000) / 10}km`
                     : ""}
+                </td>
+              )}
+              {!isDesktop() && (
+                <td className="pr-1">
+                  <Button
+                    className="bg-slate-200"
+                    variant="utility"
+                    title="View on map"
+                    onClick={() => {
+                      setActiveRoute(route.id);
+                      setScreenLayout([false, true, false]);
+                    }}
+                  >
+                    &#128204;
+                  </Button>
                 </td>
               )}
             </tr>
