@@ -8,54 +8,6 @@ import {
 import { NextResponse } from "next/server";
 import { dbQuery, sanitiseString } from "../helpers";
 
-// export async function POST(req: Request) {
-//   try {
-//     const routeFields = [
-//       "id",
-//       "name",
-//       "grade",
-//       "techgrade",
-//       "stars",
-//       "gradetype",
-//       "gradesystem",
-//       "gradescore",
-//       "height",
-//       "pitches",
-//       "crag_id",
-//     ].join(",");
-//     const routeRows = await dbQuery<Route[]>(
-//       `
-//             select id,crag_id from routes
-//               limit 20
-//       `
-//     );
-//     // select ${routeFields} from routes
-//     // stars >= ${filters.starsMin} and
-//     // stars <= ${filters.starsMax} and
-//     // ${routeName}
-//     // ${gradeFilter}
-//     // ${heightFilter} and
-//     // ${pitchesFilter}
-//     //   where
-//     //   crag_id in (1420,3116)
-//     // order by case crag_id when 1420 then 0 when 3116 then 1 end asc
-//     // limit 100
-//     if (!routeRows) throw new Error("Failed to load routes");
-
-//     console.log(routeRows);
-
-//     // return data
-//     const result = {
-//       routes: routeRows,
-//       crags: [],
-//     };
-//     return NextResponse.json(result, { status: 200 });
-//   } catch (err: any) {
-//     console.error(err);
-//     return NextResponse.json({ error: err.message }, { status: 500 });
-//   }
-// }
-
 export async function POST(req: Request) {
   try {
     const data = await req.json();

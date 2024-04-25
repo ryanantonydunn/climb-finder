@@ -18,6 +18,7 @@ export async function dbLoadLocal() {
       filename: `./data/data-public.db`,
       driver: sqlite3.Database,
     });
+    console.log("initialised local database connection");
   }
   return dbLocal;
 }
@@ -35,6 +36,7 @@ export async function dbLoadRemote() {
       application_name: "climb-finder",
     });
     dbClient = await pool.connect();
+    console.log("initialised remote database connection");
   }
   return dbClient;
 }
@@ -50,12 +52,10 @@ export async function dbQuery<Response>(
     const isRemote = process.env.DB_REMOTE === "TRUE";
     if (isRemote) {
       const client = await dbLoadRemote();
-      console.log("remote");
       const res = await client.query(query);
       return res.rows as Response;
     } else {
       const db = await dbLoadLocal();
-      console.log("local");
       const rows = await db.all<Response>(query);
       return rows;
     }
