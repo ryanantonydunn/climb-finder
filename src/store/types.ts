@@ -15,6 +15,7 @@ export const routeSearchSortKeys = [
   "gradescore",
   "height",
   "name",
+  "pitches",
   "crag_name",
 ] as const;
 
@@ -127,12 +128,16 @@ export interface GradesResponse {
 
 export type RouteSearchFn = (filters: RouteSearchForm, ref: GradesRef) => void;
 
+export type ScreenLayout = [boolean, boolean, boolean];
+
 export interface Store {
+  screenLayout: ScreenLayout;
   form: RouteSearchForm | undefined;
   grades: GradesRef | undefined;
   results: RouteSearchResults | undefined;
   isSearching: boolean;
   activeRoute: number | undefined;
+  setScreenLayout: (layout: ScreenLayout) => void;
   setForm: (form: Partial<RouteSearchForm>) => void;
   initForm: () => void;
   loadGrades: () => void;

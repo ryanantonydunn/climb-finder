@@ -255,3 +255,12 @@ export async function getCrags(ids: number[]): Promise<Crag[]> {
 export function unique(arr: unknown[]) {
   return arr.filter((item, i) => arr.indexOf(item) === i);
 }
+
+/**
+ * Is desktop screen
+ */
+
+export const mobileMaxWidth = 768;
+export function isDesktop() {
+  return screen.width > mobileMaxWidth;
+}

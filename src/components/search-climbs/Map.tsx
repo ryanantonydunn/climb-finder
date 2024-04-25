@@ -18,12 +18,9 @@ import {
 } from "react-leaflet";
 import { Button } from "../base/Button";
 import { renderName, renderStars, useRenderGrade } from "../utils";
+import { isDesktop } from "@/store/helpers";
 
-interface MapProps {
-  layout: [boolean, boolean, boolean];
-}
-
-export default function Map({ layout }: MapProps) {
+export default function Map() {
   const { form } = useStore();
   if (!form) return;
   const center: LatLngTuple =
@@ -36,21 +33,21 @@ export default function Map({ layout }: MapProps) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <MapItems layout={layout} />
+      <MapItems />
       <LatLngSearchPopup />
     </MapContainer>
   );
 }
 
-function MapItems({ layout }: MapProps) {
+function MapItems() {
   const map = useMap();
   const renderGrade = useRenderGrade();
-  const { results, activeRoute, setActiveRoute } = useStore();
+  const { results, activeRoute, setActiveRoute, screenLayout } = useStore();
 
   // resize when layout changes
   React.useEffect(() => {
     map.invalidateSize();
-  }, [layout, map]);
+  }, [screenLayout, map]);
 
   // build reference object for routes
   const sortedResults = React.useMemo(() => {
@@ -185,10 +182,13 @@ function MapItems({ layout }: MapProps) {
 }
 
 function LatLngSearchPopup() {
-  const { form, setForm } = useStore();
+  const { form, setForm, setScreenLayout } = useStore();
   const [position, setPosition] = React.useState<LatLng | null>(null);
   const map = useMapEvents({
     contextmenu(e) {
+      setPosition(e.latlng);
+    },
+    dblclick(e) {
       setPosition(e.latlng);
     },
   });
@@ -214,6 +214,9 @@ function LatLngSearchPopup() {
                 lat: position.lat,
                 long: position.lng,
               });
+              if (!isDesktop()) {
+                setScreenLayout([false, false, true]);
+              }
               setPosition(null);
             }}
           >

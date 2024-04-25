@@ -10,8 +10,8 @@ const headers = [
   { name: "Name", sortKey: "name" },
   { name: "Grade", sortKey: "gradescore" },
   { name: "Stars", sortKey: "stars" },
-  { name: "Height", sortKey: "height" },
-  { name: "Pitches", sortKey: "pitches" },
+  { name: "Ht", sortKey: "height" },
+  { name: "Pt", sortKey: "pitches" },
   { name: "Crag", sortKey: "crag_name" },
 ];
 
@@ -43,7 +43,7 @@ export function ResultsList() {
   // add distance to headers if set
   const headersWithDistance = React.useMemo(() => {
     if (results?.crags[0]?.distance !== undefined) {
-      return [...headers, { name: "Distance", sortKey: "distance" }];
+      return [...headers, { name: "Dist", sortKey: "distance" }];
     }
     return headers;
   }, [results]);
@@ -63,6 +63,7 @@ export function ResultsList() {
           {headersWithDistance.map((header, i) => (
             <Th
               key={i}
+              title={header.sortKey}
               onClick={
                 header.sortKey
                   ? () => {
@@ -111,23 +112,23 @@ export function ResultsList() {
             >
               <td>
                 <Link
-                  className="block py-1 px-2 underline"
+                  className="block py-1 px-1 md:px-2 underline"
                   target="_blank"
                   href={`https://www.ukclimbing.com/logbook/c.php?i=${route.id}`}
                 >
                   {renderName(route.name)}
                 </Link>
               </td>
-              <td className="py-1 px-2 whitespace-nowrap">
+              <td className="py-1 pr-1 whitespace-nowrap">
                 {renderGrade(route)}
               </td>
-              <td className="whitespace-nowrap tracking-tighter px-2 text-red-600">
+              <td className="whitespace-nowrap tracking-tighter pr-1 md:pr-2 text-red-600">
                 {renderStars(route)}
               </td>
-              <td className="py-1 px-2 whitespace-nowrap">
+              <td className="py-1 pr-1 md:pr-2 whitespace-nowrap">
                 {route.height === 0 ? "-" : `${route.height}m`}
               </td>
-              <td className="py-1 px-2 whitespace-nowrap">
+              <td className="py-1 pr-1 md:pr-2 whitespace-nowrap">
                 {route.height === 0 ? "-" : `${route.pitches}`}
               </td>
               <td
@@ -138,7 +139,7 @@ export function ResultsList() {
                 }`}
               >
                 <Link
-                  className={`block py-1 px-2 underline`}
+                  className={`block py-1 pr-1 md:pr-2 underline`}
                   href={`https://www.ukclimbing.com/logbook/crag.php?id=${route.crag_id}`}
                   target="_blank"
                 >
@@ -146,7 +147,7 @@ export function ResultsList() {
                 </Link>
               </td>
               {!!headersWithDistance.find((h) => h.sortKey === "distance") && (
-                <td>
+                <td className="pr-1 md:pr-2">
                   {crag?.distance
                     ? `${Math.round(crag.distance * 10000) / 10}km`
                     : ""}
@@ -162,20 +163,27 @@ export function ResultsList() {
 
 interface ThProps extends React.PropsWithChildren {
   onClick?: () => void;
+  title?: string;
 }
 
-function Th({ onClick, children }: ThProps) {
+function Th({ onClick, children, title }: ThProps) {
   return onClick ? (
-    <th>
+    <th className="first:pl-1 pr-1 md:first:pl-2 md:pr-2">
       <button
         type="button"
-        className="block w-full px-2 py-3 text-left whitespace-nowrap"
+        className="block w-full py-3 text-left whitespace-nowrap"
         onClick={onClick}
+        title={title}
       >
         {children}
       </button>
     </th>
   ) : (
-    <th className="px-2 text-left whitespace-nowrap">{children}</th>
+    <th
+      className="first:pl-1 pr-1 md:first:pl-2 md:pr-2 text-left whitespace-nowrap"
+      title={title}
+    >
+      {children}
+    </th>
   );
 }

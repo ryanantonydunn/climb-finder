@@ -8,50 +8,68 @@ import { FilterForm } from "./FilterForm";
 import { MapDynamic } from "./MapDynamic";
 import { ResultsList } from "./ResultsList";
 import { useStore } from "@/store/store";
+import { isDesktop } from "@/store/helpers";
 
 export function Layout() {
   useGrades();
   useForm();
-  const { grades, isSearching } = useStore();
-  const [showList, setShowList] = React.useState(true);
-  const [showMap, setShowMap] = React.useState(true);
-  const [showFilters, setShowFilters] = React.useState(true);
+  const { grades, isSearching, screenLayout, setScreenLayout } = useStore();
+  const [list, map, filters] = screenLayout;
+
+  React.useEffect(() => {
+    setScreenLayout(isDesktop() ? [true, true, true] : [false, false, true]);
+  }, [setScreenLayout]);
 
   return (
     <div className="h-screen w-full absolute flex flex-col text-xs">
       <header className="flex items-center bg-slate-100 border-b border-slate-300 p-1">
-        <Tag onClick={() => setShowList(!showList)} checked={showList}>
+        <Tag
+          onClick={() => {
+            setScreenLayout(
+              isDesktop() ? [!list, map, filters] : [true, false, false]
+            );
+          }}
+          checked={list}
+        >
           List
         </Tag>
         <Tag
           className="ml-1"
-          onClick={() => setShowMap(!showMap)}
-          checked={showMap}
+          onClick={() => {
+            setScreenLayout(
+              isDesktop() ? [list, !map, filters] : [false, true, false]
+            );
+          }}
+          checked={map}
         >
           Map
         </Tag>
         <Tag
           className="ml-auto"
-          onClick={() => setShowFilters(!showFilters)}
-          checked={showFilters}
+          onClick={() => {
+            setScreenLayout(
+              isDesktop() ? [list, map, !filters] : [false, false, true]
+            );
+          }}
+          checked={filters}
         >
           Filters
         </Tag>
       </header>
       <div className="flex-grow relative">
         <main className="absolute w-full h-full flex">
-          {showList && (
+          {list && (
             <section className="flex-1 h-full overflow-auto border-r border-slate-300">
               <ResultsList />
             </section>
           )}
-          {showMap && (
+          {map && (
             <section className="flex-1 h-full overflow-hidden border-r border-slate-300">
-              <MapDynamic layout={[showList, showMap, showFilters]} />
+              <MapDynamic />
             </section>
           )}
-          {showFilters && (
-            <section className="w-80 h-full overflow-y-auto">
+          {filters && (
+            <section className="w-full md:w-80 h-full overflow-y-auto">
               <FilterForm />
             </section>
           )}
