@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import { sanitiseString } from "../helpers";
 
 export async function GET(req: Request) {
   try {
-    const str = decodeURIComponent(req.url.split("q=")[1] || "")
-      .replace(/[^\w\s]/gi, "")
-      .slice(0, 50);
+    const str = sanitiseString(
+      decodeURIComponent(req.url.split("q=")[1] || "")
+    );
     if (!str) return;
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
       str

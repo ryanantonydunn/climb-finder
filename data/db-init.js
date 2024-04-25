@@ -5,13 +5,15 @@ const {
   dbRun,
   dbLoadPublic,
   dbRows,
+  dbLoadRemote,
+  getValueSqlStringFromArray,
 } = require("./db-utils");
+const { Pool } = require("pg");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
 
-async function createTableRoutes(db) {
-  console.log("creating routes table");
-  const query = `
+const createTableRoutes = `
     create table routes (
       id integer primary key,
       buttress_id integer,
@@ -37,12 +39,8 @@ async function createTableRoutes(db) {
       crag_id integer
     );
   `;
-  await dbRun(db, query);
-}
 
-async function createTableCrags(db) {
-  console.log("creating crags table");
-  const query = `
+const createTableCrags = `
     create table crags (
       id integer primary key,
       lat float,
@@ -50,45 +48,31 @@ async function createTableCrags(db) {
       name string
     );
   `;
-  await dbRun(db, query);
-}
 
-async function createTableGradeTypes(db) {
-  console.log("creating grade_types table");
-  const query = `
+const createTableGradeTypes = `
     create table grade_types (
       id integer primary key,
       name string
     );
   `;
-  await dbRun(db, query);
-}
 
-async function createTableGradeSystems(db) {
-  console.log("creating grade_systems table");
-  const query = `
+const createTableGradeSystems = `
     create table grade_systems (
       id integer primary key,
       gradetype integer,
       name string
     );
   `;
-  await dbRun(db, query);
-}
 
-async function createTableGrades(db) {
-  console.log("creating grades table");
-  const query = `
+const createTableGrades = `
     create table grades (
       id integer primary key,
       name string,
       gradesystem integer,
-      gradetype integer
-      score integer,
+      gradetype integer,
+      score integer
     );
   `;
-  await dbRun(db, query);
-}
 
 async function initCrags(db, overwrite = false) {
   // load all crags and remove duplicates
@@ -126,7 +110,7 @@ async function initCrags(db, overwrite = false) {
   await dbInsertArray(db, "crags", crags);
 }
 
-async function dbInitMain() {
+async function dbInitLocal() {
   // check if database already exists
   // if (fs.existsSync(dbPathFull)) {
   //   console.error("Database already exists");
@@ -135,13 +119,106 @@ async function dbInitMain() {
 
   // create database
   const db = await dbLoadPublic();
-
-  // await createTableCrags(db);
-  // await createTableRoutes(db);
-  // await createTableGradeTypes(db);
-  // await createTableGradeSystems(db);
-  // await createTableGrades(db);
-  // await initCrags(db);
+  await dbRun(db, createTableCrags);
+  await dbRun(db, createTableRoutes);
+  await dbRun(db, createTableGradeTypes);
+  await dbRun(db, createTableGradeSystems);
+  await dbRun(db, createTableGrades);
+  await initCrags(db);
 }
 
-dbInitMain();
+async function dbInitRemote() {
+  const client = await dbLoadRemote();
+  // client.query(createTableCrags);
+  // await client.query(createTableRoutes);
+  // await client.query(createTableGradeTypes);
+  // await client.query(createTableGradeSystems);
+  // await client.query(createTableGrades);
+
+  // copy rows
+  const db = await dbLoadPublic();
+
+  // crags
+  // const crags = await dbRows(db, "select * from crags");
+  // const cragsStr = crags
+  //   .map((r) => `(${[r.id, r.lat, r.long, `'${r.name}'`].join(",")})`)
+  //   .join(",");
+  // await client.query(`INSERT INTO crags (id,lat,long,name) VALUES ${cragsStr};`);
+
+  // grades
+  // const grades = await dbRows(db, "select * from grades");
+  // const gradesStr = grades
+  //   .map(
+  //     (r) =>
+  //       `(${[r.id, `'${r.name}'`, r.gradesystem, r.gradetype, r.score].join(
+  //         ","
+  //       )})`
+  //   )
+  //   .join(",");
+  // await client.query(`INSERT INTO grades VALUES ${gradesStr};`);
+
+  // grade_systems
+  // const grade_systems = await dbRows(db, "select * from grade_systems");
+  // const grade_systemsStr = grade_systems
+  //   .map((r) => `(${[r.id, r.gradetype, `'${r.name}'`].join(",")})`)
+  //   .join(",");
+  // await client.query(`INSERT INTO grade_systems VALUES ${grade_systemsStr};`);
+
+  // // grade_types
+  // const grade_types = await dbRows(db, "select * from grade_types");
+  // const grade_typesStr = grade_types
+  //   .map((r) => `(${[r.id, `'${r.name}'`].join(",")})`)
+  //   .join(",");
+  // await client.query(`INSERT INTO grade_types VALUES ${grade_typesStr};`);
+
+  // routes
+  // const routes = await dbRows(db, "select * from routes");
+  // const routesStr = routes
+  //   .slice(100000, 300000)
+  //   .map((r) =>
+  //     getValueSqlStringFromArray([
+  //       Number(r.id),
+  //       Number(r.buttress_id),
+  //       Number(r.buttress_ordering),
+  //       Number(r.climb_ordering),
+  //       String(r.name),
+  //       Number(r.grade),
+  //       String(r.techgrade || ""),
+  //       Number(r.stars),
+  //       Number(r.ok),
+  //       Number(r.logs),
+  //       Number(r.rockfax),
+  //       Number(r.gradesystem),
+  //       Number(r.gradetype),
+  //       Number(r.gradescore),
+  //       Number(r.height),
+  //       Number(r.pitches),
+  //       String(r.slug),
+  //       Number(r.has_topo),
+  //       Number(r.rf_crag),
+  //       Number(r.n_photos),
+  //       Number(r.crag_id),
+  //     ])
+  //   )
+  //   .join(",");
+  // console.log(routesStr.slice(0, 10000));
+
+  // await client.query(`INSERT INTO routes VALUES ${routesStr};`);
+
+  // route cragIDS
+  const routes = await dbRows(
+    db,
+    "select * from routes limit 100000 offset 200000"
+  );
+  const setCragIdMapStr = routes
+    .map((route) => `WHEN ${route.id} THEN ${route.crag_id} `)
+    .join("");
+
+  const setCragIdMapIds = routes.map((route) => route.id).join(",");
+
+  const routeCragIdQuery = `UPDATE routes SET crag_id = (CASE id ${setCragIdMapStr} end) WHERE id IN (${setCragIdMapIds});`;
+  await client.query(routeCragIdQuery);
+  client.end();
+}
+
+dbInitRemote();

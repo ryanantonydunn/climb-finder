@@ -5,6 +5,7 @@ const {
   unique,
   dbLoadPublic,
   dbRun,
+  dbLoadRemote,
 } = require("./db-utils");
 
 const homeLat = 53.74312;
@@ -144,5 +145,3 @@ async function newCrags() {
   const rows = await dbRows(db, query);
   console.log(rows);
 }
-
-newCrags();

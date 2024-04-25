@@ -1,6 +1,8 @@
 const sqlite3 = require("sqlite3");
 const { open } = require("sqlite");
 const path = require("path");
+const { Pool } = require("pg");
+require("dotenv").config();
 
 /**
  * File path of the database
@@ -22,6 +24,19 @@ const dbLoadFull = async () => dbLoad(dbPathFull);
 const dbLoadPublic = async () => dbLoad(dbPathPublic);
 
 /**
+ * Load remote db
+ */
+async function dbLoadRemote() {
+  const connectionString = process.env.DB_URL;
+  const pool = new Pool({
+    connectionString,
+    application_name: "climb-finder",
+  });
+  const client = await pool.connect();
+  return client;
+}
+
+/**
  * Create SQL string of values from an array
  * Eg: ["howdy", 1]  => '("howdy", 1)'
  */
@@ -29,15 +44,16 @@ function escapeHtml(str) {
   if (typeof str !== "string") {
     return str;
   }
-  return str
+  const escaped = str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+  return `'${escaped}'`;
 }
 function getValueSqlStringFromArray(arr) {
-  return `(${arr.map((cell) => JSON.stringify(escapeHtml(cell))).join(",")})`;
+  return `(${arr.map((cell) => escapeHtml(cell)).join(",")})`;
 }
 
 /**
@@ -86,6 +102,7 @@ module.exports = {
   dbInsertArray,
   dbLoadFull,
   dbLoadPublic,
+  dbLoadRemote,
   dbPathFull,
   dbPathPublic,
   dbRun,

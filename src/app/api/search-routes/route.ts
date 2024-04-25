@@ -6,13 +6,58 @@ import {
   routeSearchSortKeys,
 } from "@/store/types";
 import { NextResponse } from "next/server";
-import { dbLoad } from "../helpers";
+import { dbQuery, sanitiseString } from "../helpers";
+
+// export async function POST(req: Request) {
+//   try {
+//     const routeFields = [
+//       "id",
+//       "name",
+//       "grade",
+//       "techgrade",
+//       "stars",
+//       "gradetype",
+//       "gradesystem",
+//       "gradescore",
+//       "height",
+//       "pitches",
+//       "crag_id",
+//     ].join(",");
+//     const routeRows = await dbQuery<Route[]>(
+//       `
+//             select id,crag_id from routes
+//               limit 20
+//       `
+//     );
+//     // select ${routeFields} from routes
+//     // stars >= ${filters.starsMin} and
+//     // stars <= ${filters.starsMax} and
+//     // ${routeName}
+//     // ${gradeFilter}
+//     // ${heightFilter} and
+//     // ${pitchesFilter}
+//     //   where
+//     //   crag_id in (1420,3116)
+//     // order by case crag_id when 1420 then 0 when 3116 then 1 end asc
+//     // limit 100
+//     if (!routeRows) throw new Error("Failed to load routes");
+
+//     console.log(routeRows);
+
+//     // return data
+//     const result = {
+//       routes: routeRows,
+//       crags: [],
+//     };
+//     return NextResponse.json(result, { status: 200 });
+//   } catch (err: any) {
+//     console.error(err);
+//     return NextResponse.json({ error: err.message }, { status: 500 });
+//   }
+// }
 
 export async function POST(req: Request) {
   try {
-    const db = await dbLoad();
-    if (!db) return;
-
     const data = await req.json();
     const filters = data.filters as RouteSearchFilters;
 
@@ -47,9 +92,7 @@ export async function POST(req: Request) {
     [filters.heightIncludeZero, filters.pitchesIncludeZero].forEach((b) => {
       if (typeof b !== "boolean") throw new Error("Non boolean input detected");
     });
-    filters.routeNameFilter = String(filters.routeNameFilter)
-      .replace(/[^\w\s]/gi, "")
-      .slice(0, 50);
+    filters.routeNameFilter = sanitiseString(filters.routeNameFilter);
     if (!["asc", "desc"].includes(filters.sortDirection)) {
       throw new Error("Invalid sort direction");
     }
@@ -60,33 +103,39 @@ export async function POST(req: Request) {
     /**
      * Get crags
      */
-    let cragFilter = "";
-    let cragOrderBy = "";
-    let cragSelect = "*";
-    if (filters.sortKey === "crag_name") {
-      cragOrderBy = `order by name ${filters.sortDirection}`;
-    }
+    let cragQuery = "";
     if (filters.lat !== undefined && filters.long !== undefined) {
       // search by lat/long
-      const distance = filters.distanceMax / 10000;
-
+      const distanceMax = filters.distanceMax / 10000;
       const sf = Math.PI / 180; // scaling factor
       const distanceQueryString = `acos(sin(lat*${sf})*sin(${filters.lat}*${sf}) + cos(lat*${sf})*cos(${filters.lat}*${sf})*cos((long-(${filters.long}))*${sf}))`;
-      cragSelect = `*, (${distanceQueryString}) as distance`;
-      cragFilter = `where distance < ${distance}`;
-      if (filters.sortKey === "distance") {
-        cragOrderBy = `order by distance ${filters.sortDirection}`;
-      }
+      const sortQuery =
+        filters.sortKey === "distance"
+          ? `order by distance ${filters.sortDirection}`
+          : "";
+      cragQuery = `
+        select * from (select *, (${distanceQueryString}) as distance from crags)
+          where distance < ${distanceMax}
+          ${sortQuery}
+          limit 3000
+      `;
     } else if (filters.cragIds?.length) {
-      cragFilter = ` where id in (${filters.cragIds.join(",")})`;
+      // search by crag ids
+      const sortQuery =
+        filters.sortKey === "crag_name"
+          ? `order by name ${filters.sortDirection}`
+          : "";
+      cragQuery = `
+        select * from crags
+          where id in (${filters.cragIds.join(",")})
+          ${sortQuery}
+          limit 3000
+      `;
     }
-    const cragQuery = `
-      select ${cragSelect} from crags
-        ${cragFilter}
-        ${cragOrderBy}
-        limit 3000
-    `;
-    const cragRows = await db.all<Crag[]>(cragQuery);
+
+    const cragRows = await dbQuery<Crag[]>(cragQuery);
+    if (!cragRows) throw new Error("Failed to load crags");
+
     const cragIds = cragRows.map((r) => r.id);
 
     const cragIdsForFilter = cragIds.join(",");
@@ -146,8 +195,8 @@ export async function POST(req: Request) {
         order by ${routeSort} ${filters.sortDirection}
         limit 200
       `;
-
-    const routeRows = await db.all<Route[]>(routeQuery);
+    const routeRows = await dbQuery<Route[]>(routeQuery);
+    if (!routeRows) throw new Error("Failed to load routes");
 
     // return data
     const result = {

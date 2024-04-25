@@ -1,23 +1,22 @@
 import { NextResponse } from "next/server";
-import { dbLoad } from "../helpers";
 import { Crag } from "@/store/types";
+import { dbQuery, sanitiseString } from "../helpers";
 
 export async function GET(req: Request) {
   try {
-    const str = decodeURIComponent(req.url.split("q=")[1] || "")
-      .replace(/[^\w\s]/gi, "")
-      .slice(0, 50);
+    const str = sanitiseString(
+      decodeURIComponent(req.url.split("q=")[1] || "")
+    );
     if (!str) return;
-
-    const db = await dbLoad();
-    if (!db) return;
 
     const cragQuery = `
       select * from crags
         where name like '%${str}%'
         limit 15
     `;
-    const cragRows = await db.all<Crag[]>(cragQuery);
+    const cragRows = await dbQuery<Crag[]>(cragQuery);
+    if (!cragRows) if (!cragRows) throw new Error("Failed to load crags");
+
     return NextResponse.json(
       cragRows.map((r) => ({ name: r.name, value: r })),
       { status: 200 }
